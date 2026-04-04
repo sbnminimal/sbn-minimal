@@ -326,16 +326,24 @@ async function sha256(msg) {
 }
 
 // &#9472;&#9472; HELPERS &#9472;&#9472;
+function proxyUrl(url) {
+  if (!url) return null;
+  url = url.trim();
+  if (url.includes('drive.google.com')) {
+    return 'https://wsrv.nl/?url=' + encodeURIComponent(url);
+  }
+  return url;
+}
 function getFirstPhoto(p) {
   if (!p.link_imagenes) return null;
   const urls = p.link_imagenes.split('|').filter(u => u.trim());
   if (urls.length === 0) return null;
-  // Random photo each time the page loads
-  return urls[Math.floor(Math.random() * urls.length)];
+  const picked = urls[Math.floor(Math.random() * urls.length)];
+  return proxyUrl(picked);
 }
 function getAllPhotos(p) {
   if (!p.link_imagenes) return [];
-  return p.link_imagenes.split('|').filter(u => u.trim());
+  return p.link_imagenes.split('|').filter(u => u.trim()).map(proxyUrl);
 }
 
 // &#9472;&#9472; VIEWS &#9472;&#9472;
