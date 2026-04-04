@@ -403,6 +403,9 @@ function addToCartFromDetail() { if (currentDetailProduct) addToCart(currentDeta
 
 // &#9472;&#9472; INIT &#9472;&#9472;
 async function init() {
+  // Clear cart items from old versions that don't have the right structure
+  cart = cart.filter(c => c.id_producto && c.nombre_variante && !isNaN(Number(c.precio_venta)));
+  saveCart();
   const statusEl = document.getElementById('sheetStatus');
   statusEl.textContent = 'Cargando...';
   try {
@@ -577,27 +580,32 @@ function renderCart() {
   const count = cart.reduce((s,c) => s+c.qty, 0);
   document.getElementById('cartCount').textContent = count;
   document.getElementById('cartCountLabel').textContent = count + ' ' + (count===1?'item':'items');
-  const total = cart.reduce((s,c) => s+c.precio_venta*c.qty, 0);
+  const total = cart.reduce((s,c) => s+(Number(c.precio_venta)||0)*c.qty, 0);
   document.getElementById('cartSubtotal').textContent = '$' + total.toLocaleString('es-AR');
   document.getElementById('cartTotal').textContent = '$' + total.toLocaleString('es-AR');
   document.getElementById('sendBtn').disabled = !cart.length;
   const el = document.getElementById('cartItems');
   if (!cart.length) { el.innerHTML = '<div class="cart-empty"><div style="font-size:2rem">&#128717;</div><p>Tu carrito esta vacio</p></div>'; return; }
   el.innerHTML = cart.map(item => {
+    const name = item.nombre_variante || '?';
+    const ref  = item.id_producto || '?';
+    const price = Number(item.precio_venta) || 0;
+    const cat  = item.categoria || '';
+    const color= item.color || '';
     const photo = getFirstPhoto(item);
     const imgHtml = photo
-      ? '<img class="ci-img" src="'+photo+'" alt="'+item.nombre_variante+'">'
-      : '<div class="ci-img-placeholder">'+item.categoria+'</div>';
+      ? '<img class="ci-img" src="'+photo+'" alt="'+name+'">'
+      : '<div class="ci-img-placeholder">'+cat+'</div>';
     return '<div class="cart-item">'+imgHtml
       +'<div class="ci-body"><div class="ci-top"><div>'
-      +'<div class="ci-name">'+item.nombre_variante+'</div>'
-      +'<div class="ci-sub">Ref: '+item.id_producto+(item.color?' &middot; '+item.color:'')+'</div>'
-      +'</div><button class="ci-rm" onclick="removeFromCart(\''+item.id_producto+'\')">&#215;</button></div>'
+      +'<div class="ci-name">'+name+'</div>'
+      +'<div class="ci-sub">Ref: '+ref+(color?' &middot; '+color:'')+'</div>'
+      +'</div><button class="ci-rm" onclick="removeFromCart(\''+ref+'\')">&#215;</button></div>'
       +'<div class="ci-bottom"><div class="ci-qty">'
-      +'<button class="qty-btn" onclick="updateQty(\''+item.id_producto+'\',-1)">&#8722;</button>'
+      +'<button class="qty-btn" onclick="updateQty(\''+ref+'\',-1)">&#8722;</button>'
       +'<span class="qty-num">'+String(item.qty).padStart(2,'0')+'</span>'
-      +'<button class="qty-btn" onclick="updateQty(\''+item.id_producto+'\',1)">+</button>'
-      +'</div><div class="ci-price">$'+(item.precio_venta*item.qty).toLocaleString('es-AR')+'</div>'
+      +'<button class="qty-btn" onclick="updateQty(\''+ref+'\',1)">+</button>'
+      +'</div><div class="ci-price">$'+(price*item.qty).toLocaleString('es-AR')+'</div>'
       +'</div></div></div>';
   }).join('');
 }
