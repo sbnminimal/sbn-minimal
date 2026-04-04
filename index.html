@@ -562,13 +562,26 @@ function addToCart(id) {
   const sn = p.stock_disponible === null ? null : Number(p.stock_disponible);
   if (sn !== null && sn === 0) return;
   const ex = cart.find(c => c.id_producto == id);
+  const currentQty = ex ? ex.qty : 0;
+  // Validate stock limit
+  if (sn !== null && currentQty >= sn) {
+    showToast('Stock maximo alcanzado (' + sn + ' unidades)');
+    return;
+  }
   if (ex) ex.qty++; else cart.push({...p, qty:1});
   saveCart(); renderCart(); renderProducts();
   showToast(p.nombre_variante + ' agregado');
 }
 function updateQty(id, d) {
   const item = cart.find(c => String(c.id_producto) === String(id) || String(c.id) === String(id)); if (!item) return;
-  item.qty += d; if (item.qty <= 0) cart = cart.filter(c => c.id_producto != id);
+  const p = products.find(x => x.id_producto == id);
+  const sn = p ? (p.stock_disponible === null ? null : Number(p.stock_disponible)) : null;
+  // Validate stock when increasing
+  if (d > 0 && sn !== null && item.qty >= sn) {
+    showToast('Stock maximo alcanzado (' + sn + ' unidades)');
+    return;
+  }
+  item.qty += d; if (item.qty <= 0) cart = cart.filter(c => String(c.id_producto) !== String(id) && String(c.id) !== String(id));
   saveCart(); renderCart(); renderProducts();
 }
 function removeFromCart(id) { cart = cart.filter(c => String(c.id_producto) !== String(id) && String(c.id) !== String(id)); saveCart(); renderCart(); renderProducts(); }
@@ -609,15 +622,59 @@ function renderCart() {
       +'</div></div></div>';
   }).join('');
 }
-function sendToWhatsApp() {
+async function sendToWhatsApp() {
   if (!cart.length) return;
+
+  // Validate stock in real time before sending
+  const sendBtn = document.getElementById('sendBtn');
+  const origText = sendBtn.innerHTML;
+  sendBtn.disabled = true;
+  sendBtn.innerHTML = 'Verificando stock...';
+
+  try {
+    const ids = cart.map(c => c.id_producto).map(id => '"' + id + '"').join(',');
+    const fresh = await sbFetch('producto?select=id_producto,stock_disponible,nombre_variante&id_producto=in.(' + ids + ')');
+
+    const problems = [];
+    const adjusted = [];
+
+    for (const item of cart) {
+      const live = fresh.find(p => String(p.id_producto) === String(item.id_producto));
+      if (!live) continue;
+      const sn = live.stock_disponible === null ? null : Number(live.stock_disponible);
+      if (sn !== null && sn === 0) {
+        problems.push(item.nombre_variante + ' - Sin stock');
+        // Remove from cart
+        cart = cart.filter(c => String(c.id_producto) !== String(item.id_producto));
+      } else if (sn !== null && item.qty > sn) {
+        problems.push(item.nombre_variante + ' - Solo quedan ' + sn + ' unidades (ajustado)');
+        item.qty = sn;
+        adjusted.push(item);
+      }
+    }
+
+    if (problems.length > 0) {
+      saveCart(); renderCart(); renderProducts();
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = origText;
+      alert('Hay cambios en el stock:\n\n' + problems.join('\n') + '\n\nRevis&#225; tu carrito antes de continuar.');
+      return;
+    }
+  } catch(e) {
+    // If validation fails, allow sending anyway
+    console.warn('Stock validation failed:', e);
+  }
+
+  sendBtn.disabled = false;
+  sendBtn.innerHTML = origText;
+
   const note = document.getElementById('cartNote').value.trim();
-  const total = cart.reduce((s,c) => s+c.precio_venta*c.qty, 0);
+  const total = cart.reduce((s,c) => s+(Number(c.precio_venta)||0)*c.qty, 0);
   let msg = 'Hola SBN! Quiero hacer este pedido:\n\n';
   cart.forEach(it => {
     msg += '* Ref: '+it.id_producto+' - '+it.nombre_variante;
     if (it.color) msg += ' ('+it.color+')';
-    msg += ' x'+it.qty+' - $'+(it.precio_venta*it.qty).toLocaleString('es-AR')+'\n';
+    msg += ' x'+it.qty+' - $'+((Number(it.precio_venta)||0)*it.qty).toLocaleString('es-AR')+'\n';
   });
   msg += '\nTotal: $'+total.toLocaleString('es-AR')+' ARS';
   if (note) msg += '\n\nNota: '+note;
