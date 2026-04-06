@@ -488,22 +488,21 @@ async function init() {
 
 // &#9472;&#9472; HERO DINAMICO &#9472;&#9472;
 function renderHero() {
-  // Toma las primeras 3 categorias con foto disponible para el hero
+  // Toma UN producto random por categoria (con foto) y mezcla el orden
   const withPhoto = products.filter(p => getFirstPhoto(p));
-  const heroSlides = [];
-  const seen = new Set();
+  const catMap = {};
   for (const p of withPhoto) {
-    if (!seen.has(p.categoria)) {
-      seen.add(p.categoria);
-      heroSlides.push(p);
-    }
-    if (heroSlides.length === 3) break;
+    if (!catMap[p.categoria]) catMap[p.categoria] = [];
+    catMap[p.categoria].push(p);
   }
-  // Si no hay suficientes, completar con productos sin foto
-  for (const p of products) {
-    if (heroSlides.length >= 3) break;
-    if (!seen.has(p.categoria)) { seen.add(p.categoria); heroSlides.push(p); }
+  // Pick one random product per category
+  let candidates = Object.values(catMap).map(arr => arr[Math.floor(Math.random() * arr.length)]);
+  // Shuffle all categories
+  for (let i = candidates.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
   }
+  const heroSlides = candidates;
 
   const slider = document.getElementById('heroSlider');
   const dotsEl = document.getElementById('heroDots');
