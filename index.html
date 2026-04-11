@@ -553,7 +553,16 @@ function renderHero() {
     catMap[p.categoria].push(p);
   }
   // Pick one random product per category
-  let candidates = Object.values(catMap).map(arr => arr[Math.floor(Math.random() * arr.length)]);
+  let candidates = Object.values(catMap).map(arr => {
+    // Pick random product with photo for the image
+    const withPhoto = arr.filter(p => getFirstPhoto(p));
+    const picked = withPhoto.length > 0
+      ? withPhoto[Math.floor(Math.random() * withPhoto.length)]
+      : arr[Math.floor(Math.random() * arr.length)];
+    // Get subtitulo from any product in this category that has it set
+    const withSub = arr.find(p => p.subtitulo && p.subtitulo.trim() !== '');
+    return { ...picked, subtitulo: withSub ? withSub.subtitulo : '' };
+  });
   // Shuffle all categories
   for (let i = candidates.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
