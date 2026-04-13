@@ -1181,6 +1181,12 @@ function showAdminStatus(msg, type) {
 
 init();
 
+// Auto-open admin if session active
+if (sessionStorage.getItem('sbn_admin') === '1') {
+  document.getElementById('adminPanel').classList.add('open');
+  loadAdminTable();
+}
+
 // ── ADMIN TABS ──
 function switchAdminTab(tab) {
   const isProductos = tab === 'productos';
