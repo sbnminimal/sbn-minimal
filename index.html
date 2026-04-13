@@ -359,8 +359,9 @@ footer{background:var(--ink);padding:4rem 3rem;}
 <div id="adminChangePassWrap" style="display:none;background:#fff;border:1px solid var(--border);padding:1rem 1.2rem;margin-bottom:1rem;">
   <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink);margin-bottom:0.8rem;">Cambiar contraseña</div>
   <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">
+    <input type="password" id="currentPassInput" placeholder="Contraseña actual..." class="admin-search-input" style="max-width:220px;">
     <input type="password" id="newPassInput" placeholder="Nueva contraseña..." class="admin-search-input" style="max-width:220px;">
-    <input type="password" id="newPassConfirm" placeholder="Confirmar contraseña..." class="admin-search-input" style="max-width:220px;">
+    <input type="password" id="newPassConfirm" placeholder="Confirmar nueva..." class="admin-search-input" style="max-width:220px;">
     <button class="admin-save-btn" onclick="changeAdminPassword()">Guardar contraseña</button>
     <button class="admin-csv-btn" style="border-color:var(--border);color:var(--ink-lt);" onclick="document.getElementById('adminChangePassWrap').style.display='none'">Cancelar</button>
   </div>
@@ -996,28 +997,33 @@ document.addEventListener('keydown', e => {
 });
 
 async function changeAdminPassword() {
+  const cp = document.getElementById('currentPassInput').value;
   const np = document.getElementById('newPassInput').value;
   const nc = document.getElementById('newPassConfirm').value;
   const msg = document.getElementById('changePassMsg');
-  if (!np) { msg.style.color='#c0392b'; msg.textContent='Ingresá una contraseña.'; return; }
-  if (np !== nc) { msg.style.color='#c0392b'; msg.textContent='Las contraseñas no coinciden.'; return; }
+  if (!cp) { msg.style.color='#c0392b'; msg.textContent='Ingresá tu contraseña actual.'; return; }
+  if (!np) { msg.style.color='#c0392b'; msg.textContent='Ingresá la nueva contraseña.'; return; }
+  if (np !== nc) { msg.style.color='#c0392b'; msg.textContent='Las contraseñas nuevas no coinciden.'; return; }
   if (np.length < 6) { msg.style.color='#c0392b'; msg.textContent='Mínimo 6 caracteres.'; return; }
-  const hash = await sha256(np);
+  // Verify current password against Supabase
+  const currentHash = await sha256(cp);
   try {
-    // Check if record exists
-    const existing = await sbFetch('config?clave=eq.admin_password_hash&select=clave');
-    if (existing && existing.length > 0) {
-      await sbFetch('config?clave=eq.admin_password_hash', {
-        method:'PATCH', body:JSON.stringify({valor:hash}), headers:{'Prefer':'return=minimal'}
-      });
-    } else {
-      await sbFetch('config', {
-        method:'POST', body:JSON.stringify({clave:'admin_password_hash',valor:hash}), headers:{'Prefer':'return=minimal'}
-      });
+    const cfg = await sbFetch('config?clave=eq.admin_password_hash&select=valor');
+    if (!cfg || !cfg.length || cfg[0].valor !== currentHash) {
+      msg.style.color='#c0392b'; msg.textContent='La contraseña actual es incorrecta.'; return;
     }
+  } catch(e) { msg.style.color='#c0392b'; msg.textContent='Error de conexión.'; return; }
+  // Save new password
+  const newHash = await sha256(np);
+  try {
+    await sbFetch('config?clave=eq.admin_password_hash', {
+      method:'PATCH', body:JSON.stringify({valor:newHash}), headers:{'Prefer':'return=minimal'}
+    });
     msg.style.color='#27ae60'; msg.textContent='Contraseña actualizada correctamente.';
+    document.getElementById('currentPassInput').value='';
     document.getElementById('newPassInput').value='';
     document.getElementById('newPassConfirm').value='';
+    setTimeout(() => document.getElementById('adminChangePassWrap').style.display='none', 2000);
   } catch(e) { msg.style.color='#c0392b'; msg.textContent='Error al guardar: '+e.message; }
 }
 function filterAdminTable(query) {
