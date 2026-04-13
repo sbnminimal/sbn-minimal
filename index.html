@@ -1197,14 +1197,10 @@ function switchAdminTab(tab) {
   const isProductos = tab === 'productos';
   document.getElementById('tabProductos').classList.toggle('active', isProductos);
   document.getElementById('tabPedidos').classList.toggle('active', !isProductos);
-  document.getElementById('adminPedidosSection').style.display = isProductos ? 'none' : 'block';
-  document.getElementById('btnNuevoProducto').style.display = isProductos ? '' : 'none';
-  // Hide/show all productos-related elements
   document.getElementById('adminProductosSection').style.display = isProductos ? '' : 'none';
-  if (!isProductos) {
-    document.getElementById('adminHelpBox').style.display = 'none';
-    document.getElementById('adminChangePassWrap').style.display = 'none';
-  }
+  document.getElementById('adminPedidosSection').style.display = isProductos ? 'none' : 'block';
+  document.getElementById('adminHelpBox').style.display = 'none';
+  document.getElementById('adminChangePassWrap').style.display = 'none';
   if (!isProductos) loadPedidos();
 }
 
