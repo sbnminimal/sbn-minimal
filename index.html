@@ -421,7 +421,8 @@ footer{background:var(--ink);padding:4rem 3rem;}
 <script>
 
 const SUPABASE_URL = 'https://mpdrpzhziibnafdjdqdb.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wZHJwemh6aWlibmFmZGpkcWRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNTgxOTgsImV4cCI6MjA5MDgzNDE5OH0.Dvi_xq6ZV4MBQ1u3KbDNKxngaVeIWeCs7Ih7KbC39lA';
+const SUPABASE_KEY = 'sb_publishable_vpNHfS9ANfb0l3tBEQt4ew_aYJEQEr_';
+let SUPABASE_ADMIN_KEY = null; // loaded after login
 const CONFIG      = { whatsapp: '541126647783' };
 
 let products = [], cart = JSON.parse(localStorage.getItem('sbn_cart') || '[]'), activeFilter = 'todos';
@@ -431,9 +432,10 @@ let allCategories = []; // dynamic from Supabase
 // &#9472;&#9472; SUPABASE &#9472;&#9472;
 async function sbFetch(path, opts) {
   const url = SUPABASE_URL + '/rest/v1/' + path;
+  const activeKey = (opts && opts._useAdmin && SUPABASE_ADMIN_KEY) ? SUPABASE_ADMIN_KEY : SUPABASE_KEY;
   const headers = {
-    'apikey': SUPABASE_KEY,
-    'Authorization': 'Bearer ' + SUPABASE_KEY,
+    'apikey': activeKey,
+    'Authorization': 'Bearer ' + activeKey,
     'Content-Type': 'application/json',
     'Prefer': (opts && opts.method && opts.method !== 'GET') ? 'return=representation' : ''
   };
@@ -983,6 +985,11 @@ async function submitAdminLogin() {
   }
   if (hash === validHash) {
     sessionStorage.setItem('sbn_admin', '1');
+    // Load secret key for admin operations
+    try {
+      const sk = await sbFetch('config?clave=eq.admin_secret_key&select=valor');
+      if (sk && sk.length > 0) SUPABASE_ADMIN_KEY = sk[0].valor;
+    } catch(e) { console.warn('Could not load admin key'); }
     document.getElementById('adminOverlay').classList.remove('open');
     document.getElementById('adminPanel').classList.add('open');
     loadAdminTable();
@@ -1017,7 +1024,7 @@ async function changeAdminPassword() {
   const newHash = await sha256(np);
   try {
     await sbFetch('config?clave=eq.admin_password_hash', {
-      method:'PATCH', body:JSON.stringify({valor:newHash}), headers:{'Prefer':'return=minimal'}
+      method:'PATCH', _useAdmin:true, body:JSON.stringify({valor:newHash}), headers:{'Prefer':'return=minimal'}
     });
     msg.style.color='#27ae60'; msg.textContent='Contraseña actualizada correctamente.';
     document.getElementById('currentPassInput').value='';
@@ -1137,7 +1144,7 @@ async function toggleActivo(id, btn) {
   btn.classList.toggle('on');
   try {
     await sbFetch('producto?id_producto=eq.'+encodeURIComponent(id), {
-      method:'PATCH', body:JSON.stringify({activo:!isOn}), headers:{'Prefer':'return=minimal'}
+      method:'PATCH', _useAdmin:true, body:JSON.stringify({activo:!isOn}), headers:{'Prefer':'return=minimal'}
     });
     showAdminStatus('Visibilidad actualizada', 'ok');
     products = await loadProducts();
@@ -1149,7 +1156,7 @@ async function toggleActivo(id, btn) {
 async function deleteRow(id) {
   if (!confirm('¿Eliminar este producto?')) return;
   try {
-    await sbFetch('producto?id_producto=eq.'+encodeURIComponent(id), {method:'DELETE'});
+    await sbFetch('producto?id_producto=eq.'+encodeURIComponent(id), {method:'DELETE', _useAdmin:true});
     document.getElementById('arow-'+id)?.remove();
     products = await loadProducts();
     allCategories = [...new Set(products.map(p=>p.categoria).filter(Boolean))];
@@ -1173,7 +1180,7 @@ async function addNewProduct() {
     stock_disponible: (stock===''||stock===null)?null:Number(stock),
     descripcion_web:desc, link_imagenes:link, activo:true };
   try {
-    await sbFetch('producto', {method:'POST', body:JSON.stringify(row)});
+    await sbFetch('producto', {method:'POST', _useAdmin:true, body:JSON.stringify(row)});
     showAdminStatus('Producto agregado', 'ok');
     loadAdminTable();
     products = await loadProducts();
@@ -1195,6 +1202,10 @@ init();
 
 // Auto-open admin if session active
 if (sessionStorage.getItem('sbn_admin') === '1') {
+  // Restore admin key
+  sbFetch('config?clave=eq.admin_secret_key&select=valor').then(sk => {
+    if (sk && sk.length > 0) SUPABASE_ADMIN_KEY = sk[0].valor;
+  }).catch(() => {});
   document.getElementById('adminPanel').classList.add('open');
   loadAdminTable();
 }
@@ -1247,7 +1258,7 @@ function updatePedidoFromEl(el) {
 }
 async function updatePedido(id, field, value) {
   try {
-    await sbFetch('pedidos?id=eq.'+id, { method:'PATCH', body:JSON.stringify({[field]:value}), headers:{'Prefer':'return=minimal'} });
+    await sbFetch('pedidos?id=eq.'+id, { method:'PATCH', _useAdmin:true, body:JSON.stringify({[field]:value}), headers:{'Prefer':'return=minimal'} });
     showAdminStatus('Pedido actualizado', 'ok');
   } catch(e) { showAdminStatus('Error: '+e.message, 'err'); }
 }
@@ -1255,7 +1266,7 @@ async function updatePedido(id, field, value) {
 async function deletePedido(id) {
   if (!confirm('¿Eliminar este pedido?')) return;
   try {
-    await sbFetch('pedidos?id=eq.'+id, {method:'DELETE'});
+    await sbFetch('pedidos?id=eq.'+id, {method:'DELETE', _useAdmin:true});
     document.getElementById('prow-'+id)?.remove();
     showAdminStatus('Pedido eliminado', 'ok');
   } catch(e) { showAdminStatus('Error: '+e.message, 'err'); }
@@ -1343,11 +1354,11 @@ async function importCsvToSupabase() {
       const existing = products.find(p => p.id_producto === row.id_producto);
       if (existing) {
         await sbFetch('producto?id_producto=eq.'+encodeURIComponent(row.id_producto), {
-          method:'PATCH', body:JSON.stringify(row), headers:{'Prefer':'return=minimal'}
+          method:'PATCH', _useAdmin:true, body:JSON.stringify(row), headers:{'Prefer':'return=minimal'}
         });
       } else {
         await sbFetch('producto', {
-          method:'POST', body:JSON.stringify(row), headers:{'Prefer':'return=minimal'}
+          method:'POST', _useAdmin:true, body:JSON.stringify(row), headers:{'Prefer':'return=minimal'}
         });
       }
       ok++;
