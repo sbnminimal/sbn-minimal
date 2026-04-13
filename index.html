@@ -1134,8 +1134,8 @@ function renderPedidos(data) {
       +'<td style="font-size:0.68rem;max-width:220px;white-space:pre-wrap;">'+escHtml(p.detalle||'')+'</td>'
       +'<td style="white-space:nowrap;">$'+(Number(p.total)||0).toLocaleString('es-AR')+'</td>'
       +'<td style="font-size:0.68rem;max-width:120px;">'+escHtml(p.nota||'')+'</td>'
-      +'<td><select class="admin-select" onchange="updatePedido('+p.id+','estado',this.value)">'+estadoOpts+'</select></td>'
-      +'<td><input class="admin-input" style="width:160px" value="'+escHtml(p.direccion_entrega||'')+'" placeholder="Dirección..." onchange="updatePedido('+p.id+','direccion_entrega',this.value)"></td>'
+      +'<td><select class="admin-select" onchange="updatePedido('+p.id+',\'estado\',this.value)">'+estadoOpts+'</select></td>'
+      +'<td><input class="admin-input" style="width:160px" value="'+escHtml(p.direccion_entrega||'')+'" placeholder="Dirección..." onchange="updatePedido('+p.id+',\'direccion_entrega\',this.value)"></td>'
       +'<td><button class="admin-del-btn" onclick="deletePedido('+p.id+')" title="Eliminar">&#128465;</button></td>'
       +'</tr>';
   }).join('') || '<tr><td colspan="8" style="padding:2rem;text-align:center;color:var(--ink-lt);">No hay pedidos aún.</td></tr>';
