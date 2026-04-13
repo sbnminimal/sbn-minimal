@@ -80,7 +80,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(252,249,248,0.88);backd
 .prod-badge.sinstock{background:#fff;color:#323233;border:1px solid #b2b2b1;}
 .prod-actions{position:absolute;inset:0;background:rgba(50,50,51,0.06);opacity:0;transition:opacity 0.3s;display:flex;align-items:flex-end;padding:1rem;gap:0.4rem;z-index:3;}
 .product-card:hover .prod-actions{opacity:1;}
-@media(hover:none){.prod-actions{opacity:1;background:rgba(50,50,51,0.04);}}
+.touch-device .prod-actions{opacity:1;background:rgba(50,50,51,0.04);}
 .prod-quick-add{flex:1;background:#fff;color:var(--ink);border:none;padding:0.6rem;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
 .prod-quick-add:hover,.prod-quick-add.added{background:var(--ink);color:#fff;}
 .prod-quick-add.added{background:var(--accent);}
@@ -1192,6 +1192,16 @@ function showAdminStatus(msg, type) {
 }
 
 init();
+
+// Detect touch device and apply class for always-visible cart buttons
+(function detectTouch() {
+  const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+  if (isTouch) document.body.classList.add('touch-device');
+  // Also listen for first touch in case detection fails
+  window.addEventListener('touchstart', function() {
+    document.body.classList.add('touch-device');
+  }, { once: true, passive: true });
+})();
 
 // Auto-open admin if session active
 if (sessionStorage.getItem('sbn_admin') === '1') {
