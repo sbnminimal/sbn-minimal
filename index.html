@@ -370,7 +370,7 @@ footer{background:var(--ink);padding:4rem 3rem;}
 <div id="adminStatusMsg"></div>
 <div class="admin-search-wrap" style="justify-content:space-between;">
   <div style="display:flex;align-items:center;gap:0.6rem;">
-    <input class="admin-search-input" type="text" id="adminSearchInput" placeholder="Buscar por ID producto..." oninput="filterAdminTable(this.value)" style="max-width:600px;width:600px;">
+    <input class="admin-search-input" type="text" id="adminSearchInput" placeholder="Buscar por ID o categoría..." oninput="filterAdminTable(this.value)" style="max-width:600px;width:600px;">
     <button class="admin-search-clear" onclick="clearAdminSearch()" title="Limpiar">&#215;</button>
     <span class="admin-search-count" id="adminSearchCount"></span>
   </div>
@@ -1027,7 +1027,8 @@ function filterAdminTable(query) {
   rows.forEach(row => {
     const id = row.id.replace('arow-', '').toLowerCase();
     const name = row.querySelector('[data-field="nombre_variante"]')?.value?.toLowerCase() || '';
-    const match = !q || id.includes(q) || name.includes(q);
+    const cat  = row.querySelector('[data-field="categoria"]')?.value?.toLowerCase() || '';
+    const match = !q || id.includes(q) || name.includes(q) || cat.includes(q);
     row.style.display = match ? '' : 'none';
     if (match) visible++;
   });
