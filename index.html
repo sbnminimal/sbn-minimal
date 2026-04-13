@@ -344,8 +344,18 @@ footer{background:var(--ink);padding:4rem 3rem;}
 </div>
 <div class="admin-overlay" id="adminOverlay"><div class="admin-login"><h2>Panel Admin</h2><p>SBN &middot; Acceso restringido</p><input class="admin-pwd-input" type="password" id="adminPwdInput" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"><button class="admin-pwd-btn" onclick="submitAdminLogin()">Ingresar</button><div class="admin-login-msg" id="adminLoginMsg"></div><button class="admin-login-cancel" onclick="closeAdminLogin()">Cancelar</button></div></div>
 <div class="admin-panel" id="adminPanel">
-<div class="admin-topbar"><h1>SBN Admin</h1><div class="admin-topbar-right"><button class="admin-tab-btn active" id="tabProductos" onclick="switchAdminTab('productos')">Productos</button><button class="admin-tab-btn" id="tabPedidos" onclick="switchAdminTab('pedidos')">Pedidos</button><button class="admin-add-btn" id="btnNuevoProducto" onclick="addNewProduct()">+ Nuevo producto</button><button class="admin-csv-btn" onclick="openCsvImport()">&#8679; Importar CSV</button><button class="admin-sync-btn" onclick="loadAdminTable()">&#8635; Recargar</button><button class="admin-close-btn" onclick="closeAdmin()">&#215; Salir</button></div></div>
-<div class="admin-content"><div class="admin-info-bar">&#128161; Editá directamente en la tabla y apretá <strong>Guardar</strong>. Los cambios se publican al instante. La categoria se crea sola en la tienda cuando la escribis. El toggle oculta/muestra sin borrar.</div>
+<div class="admin-topbar"><h1>SBN Admin</h1><div class="admin-topbar-right"><button class="admin-tab-btn active" id="tabProductos" onclick="switchAdminTab('productos')">Productos</button><button class="admin-tab-btn" id="tabPedidos" onclick="switchAdminTab('pedidos')">Pedidos</button><button class="admin-add-btn" id="btnNuevoProducto" onclick="addNewProduct()">+ Nuevo producto</button><button class="admin-csv-btn" onclick="openCsvImport()">&#8679; Importar CSV</button><button class="admin-sync-btn" onclick="loadAdminTable()">&#8635; Recargar</button><button class="admin-csv-btn" onclick="document.getElementById('adminChangePassWrap').style.display='block'">&#128274; Contraseña</button><button class="admin-close-btn" onclick="closeAdmin()">&#215; Salir</button></div></div>
+<div class="admin-content"><div class="admin-info-bar">&#128161; Editá directamente en la tabla y apretá <strong>Guardar</strong>. Los cambios se publican al instante. La categoría se crea sola en la tienda cuando la escribís. El toggle oculta/muestra sin borrar.</div>
+<div id="adminChangePassWrap" style="display:none;background:#fff;border:1px solid var(--border);padding:1rem 1.2rem;margin-bottom:1rem;">
+  <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink);margin-bottom:0.8rem;">Cambiar contraseña</div>
+  <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">
+    <input type="password" id="newPassInput" placeholder="Nueva contraseña..." class="admin-search-input" style="max-width:220px;">
+    <input type="password" id="newPassConfirm" placeholder="Confirmar contraseña..." class="admin-search-input" style="max-width:220px;">
+    <button class="admin-save-btn" onclick="changeAdminPassword()">Guardar contraseña</button>
+    <button class="admin-csv-btn" style="border-color:var(--border);color:var(--ink-lt);" onclick="document.getElementById('adminChangePassWrap').style.display='none'">Cancelar</button>
+  </div>
+  <div id="changePassMsg" style="font-size:0.68rem;margin-top:0.5rem;min-height:1rem;"></div>
+</div>
 <div id="adminStatusMsg"></div>
 <div class="admin-search-wrap">
   <input class="admin-search-input" type="text" id="adminSearchInput" placeholder="Buscar por ID producto..." oninput="filterAdminTable(this.value)">
@@ -397,7 +407,6 @@ footer{background:var(--ink);padding:4rem 3rem;}
 
 const SUPABASE_URL = 'https://mpdrpzhziibnafdjdqdb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wZHJwemh6aWlibmFmZGpkcWRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNTgxOTgsImV4cCI6MjA5MDgzNDE5OH0.Dvi_xq6ZV4MBQ1u3KbDNKxngaVeIWeCs7Ih7KbC39lA';
-const PWD_HASH    = '716acff551121975f80b9fe0a860af0f9d88d9f8c24cb8a16596c706a48a8b47';
 const CONFIG      = { whatsapp: '541126647783' };
 
 let products = [], cart = JSON.parse(localStorage.getItem('sbn_cart') || '[]'), activeFilter = 'todos';
@@ -928,17 +937,37 @@ function showToast(msg) {
 
 // &#9472;&#9472; ADMIN &#9472;&#9472;
 function openAdminLogin() {
+  // Check if already logged in this session
+  if (sessionStorage.getItem('sbn_admin') === '1') {
+    document.getElementById('adminPanel').classList.add('open');
+    loadAdminTable();
+    return;
+  }
   document.getElementById('adminOverlay').classList.add('open');
   document.getElementById('adminPwdInput').value = '';
   document.getElementById('adminLoginMsg').textContent = '';
   setTimeout(() => document.getElementById('adminPwdInput').focus(), 100);
 }
 function closeAdminLogin() { document.getElementById('adminOverlay').classList.remove('open'); }
-function closeAdmin()      { document.getElementById('adminPanel').classList.remove('open'); }
+function closeAdmin() { sessionStorage.removeItem('sbn_admin'); document.getElementById('adminPanel').classList.remove('open'); }
 async function submitAdminLogin() {
   const pwd = document.getElementById('adminPwdInput').value;
   const hash = await sha256(pwd);
-  if (hash === PWD_HASH) {
+  // Get hash from Supabase config
+  let validHash = null;
+  try {
+    const cfg = await sbFetch('config?clave=eq.admin_password_hash&select=valor');
+    if (cfg && cfg.length > 0 && cfg[0].valor) validHash = cfg[0].valor;
+  } catch(e) {
+    document.getElementById('adminLoginMsg').textContent = 'Error de conexión. Intentá de nuevo.';
+    return;
+  }
+  if (!validHash) {
+    document.getElementById('adminLoginMsg').textContent = 'Contraseña no configurada en la base de datos.';
+    return;
+  }
+  if (hash === validHash) {
+    sessionStorage.setItem('sbn_admin', '1');
     document.getElementById('adminOverlay').classList.remove('open');
     document.getElementById('adminPanel').classList.add('open');
     loadAdminTable();
@@ -952,6 +981,31 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && document.getElementById('adminOverlay').classList.contains('open')) submitAdminLogin();
 });
 
+async function changeAdminPassword() {
+  const np = document.getElementById('newPassInput').value;
+  const nc = document.getElementById('newPassConfirm').value;
+  const msg = document.getElementById('changePassMsg');
+  if (!np) { msg.style.color='#c0392b'; msg.textContent='Ingresá una contraseña.'; return; }
+  if (np !== nc) { msg.style.color='#c0392b'; msg.textContent='Las contraseñas no coinciden.'; return; }
+  if (np.length < 6) { msg.style.color='#c0392b'; msg.textContent='Mínimo 6 caracteres.'; return; }
+  const hash = await sha256(np);
+  try {
+    // Check if record exists
+    const existing = await sbFetch('config?clave=eq.admin_password_hash&select=clave');
+    if (existing && existing.length > 0) {
+      await sbFetch('config?clave=eq.admin_password_hash', {
+        method:'PATCH', body:JSON.stringify({valor:hash}), headers:{'Prefer':'return=minimal'}
+      });
+    } else {
+      await sbFetch('config', {
+        method:'POST', body:JSON.stringify({clave:'admin_password_hash',valor:hash}), headers:{'Prefer':'return=minimal'}
+      });
+    }
+    msg.style.color='#27ae60'; msg.textContent='Contraseña actualizada correctamente.';
+    document.getElementById('newPassInput').value='';
+    document.getElementById('newPassConfirm').value='';
+  } catch(e) { msg.style.color='#c0392b'; msg.textContent='Error al guardar: '+e.message; }
+}
 function filterAdminTable(query) {
   const q = query.trim().toLowerCase();
   const rows = document.querySelectorAll('#adminTableBody tr');
