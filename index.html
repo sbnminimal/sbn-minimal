@@ -722,7 +722,7 @@ function renderProducts() {
       : '<div class="prod-no-img"><span>'+p.categoria+'</span></div>';
     const sn = p.stock_disponible === null ? null : Number(p.stock_disponible);
     const oos = sn !== null && sn === 0;
-    return '<div class="product-card" style="animation-delay:'+(idx*0.04)+'s" onclick="showDetail(\''+p.id_producto+'\')">'
+    return '<div class="product-card" style="animation-delay:'+(idx*0.04)+'s" onclick="showDetail(\''+p.id_producto+'\')" ontouchend="event.preventDefault();showDetail(\''+p.id_producto+'\')">'
       +'<div class="prod-img-wrap">'+imgHtml
       +(oos?'<div class="out-of-stock-overlay"><span class="out-of-stock-label">Sin stock</span></div>':'')
       +(p.etiqueta&&!oos?'<span class="prod-badge '+getBadgeClass(p.etiqueta)+'">'+p.etiqueta+'</span>':'')
