@@ -1122,7 +1122,7 @@ async function saveRow(id) {
   });
   try {
     await sbFetch('producto?id_producto=eq.'+encodeURIComponent(originalId), {
-      method: 'PATCH', body: JSON.stringify(updates), headers: {'Prefer':'return=minimal'}
+      method: 'PATCH', _useAdmin: true, body: JSON.stringify(updates), headers: {'Prefer':'return=minimal'}
     });
     // Update row id and original-id if id_producto changed
     if (idInput && idInput.value !== originalId) {
