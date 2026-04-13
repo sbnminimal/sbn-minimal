@@ -813,13 +813,30 @@ function renderCart() {
       +'</div></div></div>';
   }).join('');
 }
-function generarNroOrden() {
+async function generarNroOrden() {
+  // Get last order number from Supabase and increment
+  try {
+    const data = await sbFetch('pedidos?select=nro_orden&order=id.desc&limit=1');
+    if (data && data.length > 0 && data[0].nro_orden) {
+      const last = data[0].nro_orden;
+      const parts = last.split('-');
+      const lastNum = parseInt(parts[parts.length - 1]);
+      if (!isNaN(lastNum)) {
+        const next = String(lastNum + 1).padStart(4, '0');
+        const now = new Date();
+        const fecha = now.getFullYear().toString()
+          + String(now.getMonth()+1).padStart(2,'0')
+          + String(now.getDate()).padStart(2,'0');
+        return 'SBN-' + fecha + '-' + next;
+      }
+    }
+  } catch(e) { console.warn('Error getting last order:', e); }
+  // Fallback: use timestamp + random
   const now = new Date();
   const fecha = now.getFullYear().toString()
     + String(now.getMonth()+1).padStart(2,'0')
     + String(now.getDate()).padStart(2,'0');
-  const rand = String(Math.floor(Math.random()*9000)+1000);
-  return 'SBN-' + fecha + '-' + rand;
+  return 'SBN-' + fecha + '-' + String(Math.floor(Math.random()*9000)+1000);
 }
 
 async function sendToWhatsApp() {
@@ -870,7 +887,7 @@ async function sendToWhatsApp() {
 
   const note = document.getElementById('cartNote').value.trim();
   const total = cart.reduce((s,c) => s+(Number(c.precio_venta)||0)*c.qty, 0);
-  const nroOrden = generarNroOrden();
+  const nroOrden = await generarNroOrden();
 
   let detalle = '';
   cart.forEach(it => {
