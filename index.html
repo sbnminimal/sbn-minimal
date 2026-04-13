@@ -370,7 +370,7 @@ footer{background:var(--ink);padding:4rem 3rem;}
 <div id="adminStatusMsg"></div>
 <div class="admin-search-wrap" style="justify-content:space-between;">
   <div style="display:flex;align-items:center;gap:0.6rem;">
-    <input class="admin-search-input" type="text" id="adminSearchInput" placeholder="Buscar por ID producto..." oninput="filterAdminTable(this.value)">
+    <input class="admin-search-input" type="text" id="adminSearchInput" placeholder="Buscar por ID producto..." oninput="filterAdminTable(this.value)" style="max-width:600px;width:600px;">
     <button class="admin-search-clear" onclick="clearAdminSearch()" title="Limpiar">&#215;</button>
     <span class="admin-search-count" id="adminSearchCount"></span>
   </div>
