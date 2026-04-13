@@ -229,6 +229,9 @@ footer{background:var(--ink);padding:4rem 3rem;}
 .admin-add-btn:hover{background:var(--accent-lt);}
 .admin-close-btn{background:none;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);padding:0.4rem 0.8rem;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
 .admin-close-btn:hover{border-color:#fff;color:#fff;}
+.admin-tab-btn{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);border:none;padding:0.4rem 0.9rem;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+.admin-tab-btn.active{background:#fff;color:var(--ink);}
+.admin-tab-btn:hover:not(.active){background:rgba(255,255,255,0.2);color:#fff;}
 .admin-sync-btn{background:var(--accent);color:#fff;border:none;padding:0.4rem 0.9rem;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:opacity 0.2s;}
 .admin-sync-btn:hover{opacity:0.85;}
 .admin-csv-btn{background:none;border:1px solid rgba(255,255,255,0.4);color:rgba(255,255,255,0.8);padding:0.4rem 0.9rem;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
@@ -341,7 +344,7 @@ footer{background:var(--ink);padding:4rem 3rem;}
 </div>
 <div class="admin-overlay" id="adminOverlay"><div class="admin-login"><h2>Panel Admin</h2><p>SBN &middot; Acceso restringido</p><input class="admin-pwd-input" type="password" id="adminPwdInput" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"><button class="admin-pwd-btn" onclick="submitAdminLogin()">Ingresar</button><div class="admin-login-msg" id="adminLoginMsg"></div><button class="admin-login-cancel" onclick="closeAdminLogin()">Cancelar</button></div></div>
 <div class="admin-panel" id="adminPanel">
-<div class="admin-topbar"><h1>SBN Admin</h1><div class="admin-topbar-right"><button class="admin-add-btn" onclick="addNewProduct()">+ Nuevo producto</button><button class="admin-csv-btn" onclick="openCsvImport()">&#8679; Importar CSV</button><button class="admin-sync-btn" onclick="loadAdminTable()">&#8635; Recargar</button><button class="admin-close-btn" onclick="closeAdmin()">&#215; Salir</button></div></div>
+<div class="admin-topbar"><h1>SBN Admin</h1><div class="admin-topbar-right"><button class="admin-tab-btn active" id="tabProductos" onclick="switchAdminTab('productos')">Productos</button><button class="admin-tab-btn" id="tabPedidos" onclick="switchAdminTab('pedidos')">Pedidos</button><button class="admin-add-btn" id="btnNuevoProducto" onclick="addNewProduct()">+ Nuevo producto</button><button class="admin-csv-btn" onclick="openCsvImport()">&#8679; Importar CSV</button><button class="admin-sync-btn" onclick="loadAdminTable()">&#8635; Recargar</button><button class="admin-close-btn" onclick="closeAdmin()">&#215; Salir</button></div></div>
 <div class="admin-content"><div class="admin-info-bar">&#128161; Editá directamente en la tabla y apretá <strong>Guardar</strong>. Los cambios se publican al instante. La categoria se crea sola en la tienda cuando la escribis. El toggle oculta/muestra sin borrar.</div>
 <div id="adminStatusMsg"></div>
 <div class="admin-search-wrap">
@@ -378,7 +381,7 @@ footer{background:var(--ink);padding:4rem 3rem;}
 const SUPABASE_URL = 'https://mpdrpzhziibnafdjdqdb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wZHJwemh6aWlibmFmZGpkcWRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNTgxOTgsImV4cCI6MjA5MDgzNDE5OH0.Dvi_xq6ZV4MBQ1u3KbDNKxngaVeIWeCs7Ih7KbC39lA';
 const PWD_HASH    = '716acff551121975f80b9fe0a860af0f9d88d9f8c24cb8a16596c706a48a8b47';
-const CONFIG      = { whatsapp: '5491158237678' };
+const CONFIG      = { whatsapp: '541126647783' };
 
 let products = [], cart = JSON.parse(localStorage.getItem('sbn_cart') || '[]'), activeFilter = 'todos';
 let currentDetailProduct = null;
@@ -769,6 +772,15 @@ function renderCart() {
       +'</div></div></div>';
   }).join('');
 }
+function generarNroOrden() {
+  const now = new Date();
+  const fecha = now.getFullYear().toString()
+    + String(now.getMonth()+1).padStart(2,'0')
+    + String(now.getDate()).padStart(2,'0');
+  const rand = String(Math.floor(Math.random()*9000)+1000);
+  return 'SBN-' + fecha + '-' + rand;
+}
+
 async function sendToWhatsApp() {
   if (!cart.length) return;
 
@@ -817,15 +829,36 @@ async function sendToWhatsApp() {
 
   const note = document.getElementById('cartNote').value.trim();
   const total = cart.reduce((s,c) => s+(Number(c.precio_venta)||0)*c.qty, 0);
-  let msg = '\u00A1Hola! Me enamoré de algunos productos de SBN \uD83D\uDED2\n\nMi pedido:\n\n';
+  const nroOrden = generarNroOrden();
+
+  let detalle = '';
   cart.forEach(it => {
-    msg += '\u2022 Ref: '+it.id_producto+' - '+it.nombre_variante;
-    if (it.color) msg += ' ('+it.color+')';
-    msg += ' x'+it.qty+' \u2014 $'+((Number(it.precio_venta)||0)*it.qty).toLocaleString('es-AR')+'\n';
+    detalle += '• Ref: '+it.id_producto+' - '+it.nombre_variante;
+    if (it.color) detalle += ' ('+it.color+')';
+    detalle += ' x'+it.qty+' — $'+((Number(it.precio_venta)||0)*it.qty).toLocaleString('es-AR')+'\n';
   });
+
+  let msg = '\u00A1Hola! Me enamoré de algunos productos de SBN \uD83D\uDED2\n\n';
+  msg += '\uD83D\uDCCB *Orden: '+nroOrden+'*\n\n';
+  msg += 'Mi pedido:\n\n' + detalle;
   msg += '\n*Total: $'+total.toLocaleString('es-AR')+' ARS*';
   msg += '\n\n\u00BFMe podés confirmar disponibilidad y datos para transferir? \u00A1Gracias!';
   if (note) msg += '\n\nNota: '+note;
+
+  // Save order to Supabase
+  const pedido = {
+    nro_orden: nroOrden,
+    detalle: detalle,
+    total: total,
+    nota: note || '',
+    estado: 'Pendiente',
+    direccion_entrega: ''
+  };
+  sbFetch('pedidos', {
+    method: 'POST',
+    body: JSON.stringify(pedido),
+    headers: {'Prefer': 'return=minimal'}
+  }).catch(e => console.warn('Error guardando pedido:', e));
   const a = document.createElement('a');
   a.href = 'https://wa.me/'+CONFIG.whatsapp+'?text='+encodeURIComponent(msg);
   a.target = '_blank'; a.rel = 'noopener noreferrer';
@@ -1067,6 +1100,68 @@ function showAdminStatus(msg, type) {
 }
 
 init();
+
+// ── ADMIN TABS ──
+function switchAdminTab(tab) {
+  const isProductos = tab === 'productos';
+  document.getElementById('tabProductos').classList.toggle('active', isProductos);
+  document.getElementById('tabPedidos').classList.toggle('active', !isProductos);
+  document.getElementById('adminPedidosSection').style.display = isProductos ? 'none' : 'block';
+  document.getElementById('btnNuevoProducto').style.display = isProductos ? '' : 'none';
+  document.querySelector('.admin-search-wrap').style.display = isProductos ? '' : 'none';
+  document.querySelector('.admin-table-wrap').style.display = isProductos ? '' : 'none';
+  if (!isProductos) loadPedidos();
+}
+
+let allPedidos = [];
+async function loadPedidos() {
+  document.getElementById('pedidosTableBody').innerHTML = '<tr><td colspan="8" style="padding:2rem;text-align:center;color:var(--ink-lt);">Cargando pedidos...</td></tr>';
+  try {
+    allPedidos = await sbFetch('pedidos?select=*&order=fecha.desc');
+    renderPedidos(allPedidos);
+  } catch(e) { showAdminStatus('Error cargando pedidos: '+e.message, 'err'); }
+}
+
+function renderPedidos(data) {
+  document.getElementById('pedidosCount').textContent = data.length + ' pedido' + (data.length!==1?'s':'');
+  const estados = ['Pendiente','Confirmado','En preparación','Enviado','Entregado','Cancelado'];
+  document.getElementById('pedidosTableBody').innerHTML = data.map(p => {
+    const fecha = p.fecha ? new Date(p.fecha).toLocaleString('es-AR') : '';
+    const estadoOpts = estados.map(e => '<option'+(p.estado===e?' selected':'')+'>'+e+'</option>').join('');
+    return '<tr id="prow-'+p.id+'">'
+      +'<td style="white-space:nowrap;font-weight:600;font-size:0.72rem;">'+escHtml(p.nro_orden||'')+'</td>'
+      +'<td style="white-space:nowrap;font-size:0.68rem;color:var(--ink-lt);">'+fecha+'</td>'
+      +'<td style="font-size:0.68rem;max-width:220px;white-space:pre-wrap;">'+escHtml(p.detalle||'')+'</td>'
+      +'<td style="white-space:nowrap;">$'+(Number(p.total)||0).toLocaleString('es-AR')+'</td>'
+      +'<td style="font-size:0.68rem;max-width:120px;">'+escHtml(p.nota||'')+'</td>'
+      +'<td><select class="admin-select" onchange="updatePedido('+p.id+','estado',this.value)">'+estadoOpts+'</select></td>'
+      +'<td><input class="admin-input" style="width:160px" value="'+escHtml(p.direccion_entrega||'')+'" placeholder="Dirección..." onchange="updatePedido('+p.id+','direccion_entrega',this.value)"></td>'
+      +'<td><button class="admin-del-btn" onclick="deletePedido('+p.id+')" title="Eliminar">&#128465;</button></td>'
+      +'</tr>';
+  }).join('') || '<tr><td colspan="8" style="padding:2rem;text-align:center;color:var(--ink-lt);">No hay pedidos aún.</td></tr>';
+}
+
+async function updatePedido(id, field, value) {
+  try {
+    await sbFetch('pedidos?id=eq.'+id, { method:'PATCH', body:JSON.stringify({[field]:value}), headers:{'Prefer':'return=minimal'} });
+    showAdminStatus('Pedido actualizado', 'ok');
+  } catch(e) { showAdminStatus('Error: '+e.message, 'err'); }
+}
+
+async function deletePedido(id) {
+  if (!confirm('¿Eliminar este pedido?')) return;
+  try {
+    await sbFetch('pedidos?id=eq.'+id, {method:'DELETE'});
+    document.getElementById('prow-'+id)?.remove();
+    showAdminStatus('Pedido eliminado', 'ok');
+  } catch(e) { showAdminStatus('Error: '+e.message, 'err'); }
+}
+
+function filterPedidos(q) {
+  const query = q.toLowerCase();
+  allPedidos.filter(p => !query || (p.nro_orden||'').toLowerCase().includes(query) || (p.detalle||'').toLowerCase().includes(query));
+  renderPedidos(query ? allPedidos.filter(p => (p.nro_orden||'').toLowerCase().includes(query) || (p.detalle||'').toLowerCase().includes(query)) : allPedidos);
+}
 
 // ── CSV IMPORT ──
 let csvParsedRows = [];
