@@ -381,7 +381,7 @@ footer{background:var(--ink);padding:4rem 3rem;}
 
 <div id="adminPedidosSection" style="display:none;">
   <div class="admin-search-wrap">
-    <input class="admin-search-input" type="text" id="pedidosSearch" placeholder="Buscar por nro de orden o producto..." oninput="filterPedidos(this.value)">
+    <input class="admin-search-input" type="text" id="pedidosSearch" placeholder="Buscar por nro de orden o producto..." oninput="filterPedidos(this.value)" style="max-width:600px;width:600px;">
     <button class="admin-search-clear" onclick="document.getElementById('pedidosSearch').value='';filterPedidos('')">&#215;</button>
     <span class="admin-search-count" id="pedidosCount"></span>
   </div>
