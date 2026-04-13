@@ -432,14 +432,17 @@ let allCategories = []; // dynamic from Supabase
 // &#9472;&#9472; SUPABASE &#9472;&#9472;
 async function sbFetch(path, opts) {
   const url = SUPABASE_URL + '/rest/v1/' + path;
-  const activeKey = (opts && opts._useAdmin && SUPABASE_ADMIN_KEY) ? SUPABASE_ADMIN_KEY : SUPABASE_KEY;
+  const useAdmin = opts && opts._useAdmin;
+  const activeKey = (useAdmin && SUPABASE_ADMIN_KEY) ? SUPABASE_ADMIN_KEY : SUPABASE_KEY;
   const headers = {
     'apikey': activeKey,
     'Authorization': 'Bearer ' + activeKey,
     'Content-Type': 'application/json',
     'Prefer': (opts && opts.method && opts.method !== 'GET') ? 'return=representation' : ''
   };
-  const res = await fetch(url, { ...opts, headers: { ...headers, ...(opts && opts.headers) } });
+  // Remove _useAdmin from opts before passing to fetch
+  const { _useAdmin, ...fetchOpts } = opts || {};
+  const res = await fetch(url, { ...fetchOpts, headers: { ...headers, ...(fetchOpts.headers) } });
   if (!res.ok) { const e = await res.text(); throw new Error(e); }
   const txt = await res.text();
   return txt ? JSON.parse(txt) : null;
