@@ -256,7 +256,8 @@ footer{background:var(--ink);padding:4rem 3rem;}
 .csv-import-btn:disabled{opacity:0.4;cursor:not-allowed;}
 .csv-cancel-btn{background:none;border:1px solid var(--border);color:var(--ink-mid);padding:0.7rem 1.2rem;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;}
 .csv-info{font-size:0.68rem;color:var(--ink-lt);}
-.admin-content{flex:1;overflow-y:auto;padding:1.5rem;}
+.admin-content{flex:1;overflow-y:auto;padding:0;}
+.admin-content-inner{padding:1.5rem;}
 .admin-info-bar{background:var(--accent-lt);border:1px solid rgba(106,92,70,0.2);padding:0.8rem 1.2rem;font-size:0.7rem;color:var(--accent);margin-bottom:1.2rem;line-height:1.7;}
 .admin-search-wrap{margin-bottom:1rem;display:flex;align-items:center;gap:0.6rem;}
 .admin-search-input{flex:1;max-width:320px;border:1px solid var(--border);background:var(--bg-low);padding:0.5rem 0.9rem;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.75rem;color:var(--ink);outline:none;transition:border-color 0.15s;}
@@ -345,7 +346,7 @@ footer{background:var(--ink);padding:4rem 3rem;}
 <div class="admin-overlay" id="adminOverlay"><div class="admin-login"><h2>Panel Admin</h2><p>SBN &middot; Acceso restringido</p><input class="admin-pwd-input" type="password" id="adminPwdInput" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"><button class="admin-pwd-btn" onclick="submitAdminLogin()">Ingresar</button><div class="admin-login-msg" id="adminLoginMsg"></div><button class="admin-login-cancel" onclick="closeAdminLogin()">Cancelar</button></div></div>
 <div class="admin-panel" id="adminPanel">
 <div class="admin-topbar"><h1>SBN Admin</h1><div class="admin-topbar-right"><button class="admin-tab-btn active" id="tabProductos" onclick="switchAdminTab('productos')">Productos</button><button class="admin-tab-btn" id="tabPedidos" onclick="switchAdminTab('pedidos')">Pedidos</button><button class="admin-csv-btn" onclick="openCsvImport()">&#8679; Importar CSV</button><button class="admin-sync-btn" onclick="loadAdminTable()">&#8635; Recargar</button><button class="admin-csv-btn" onclick="document.getElementById('adminChangePassWrap').style.display='block'">&#128274; Contraseña</button><button class="admin-close-btn" onclick="closeAdmin()">&#215; Salir</button><button onclick="document.getElementById('adminHelpBox').style.display=document.getElementById('adminHelpBox').style.display==='none'?'block':'none'" title="Ayuda" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.5);font-size:1.1rem;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:color 0.2s;margin-left:0.3rem;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.5)'">&#9432;</button></div></div>
-<div class="admin-content"><div id="adminHelpBox" style="display:none;background:var(--accent-lt);border:1px solid rgba(106,92,70,0.2);padding:1rem 1.2rem;font-size:0.72rem;color:var(--accent);margin-bottom:1rem;line-height:1.9;">
+<div class="admin-content"><div class="admin-content-inner"><div id="adminHelpBox" style="display:none;background:var(--accent-lt);border:1px solid rgba(106,92,70,0.2);padding:1rem 1.2rem;font-size:0.72rem;color:var(--accent);margin-bottom:1rem;line-height:1.9;">
   <strong>&#128161; Cómo usar el panel admin:</strong><br>
   • <strong>Productos:</strong> Editá cualquier campo directo en la tabla y apretá <strong>Guardar</strong> en esa fila. Los cambios se publican al instante.<br>
   • <strong>Categoría:</strong> Si escribís una categoría nueva, se crea sola en la tienda automáticamente.<br>
@@ -378,8 +379,8 @@ footer{background:var(--ink);padding:4rem 3rem;}
 <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>ID</th><th>Nombre</th><th>Categoría</th><th>Subtítulo Hero</th><th>Color</th><th>Precio ARS</th><th>Stock</th><th>Estado</th><th>Etiqueta</th><th>Link Imagen</th><th>Descripción Web</th><th>Visible</th><th>Acciones</th></tr></thead><tbody id="adminTableBody"></tbody></table></div>
 </div>
 
-</div>
-<div id="adminPedidosSection" style="display:none;">
+</div></div>
+<div id="adminPedidosSection" style="display:none;padding:1rem 1.5rem;">
   <div class="admin-search-wrap">
     <input class="admin-search-input" type="text" id="pedidosSearch" placeholder="Buscar por nro de orden o producto..." oninput="filterPedidos(this.value)">
     <button class="admin-search-clear" onclick="document.getElementById('pedidosSearch').value='';filterPedidos('')">&#215;</button>
@@ -1201,8 +1202,6 @@ function switchAdminTab(tab) {
   document.getElementById('adminPedidosSection').style.display = isProductos ? 'none' : 'block';
   document.getElementById('adminHelpBox').style.display = 'none';
   document.getElementById('adminChangePassWrap').style.display = 'none';
-  // Remove top padding when on pedidos so there's no blank space
-  document.querySelector('.admin-content').style.paddingTop = isProductos ? '' : '0';
   if (!isProductos) loadPedidos();
 }
 
