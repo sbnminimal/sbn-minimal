@@ -260,7 +260,7 @@ footer{background:var(--ink);padding:4rem 3rem;}
 .admin-content-inner{padding:1.5rem;}
 .admin-info-bar{background:var(--accent-lt);border:1px solid rgba(106,92,70,0.2);padding:0.8rem 1.2rem;font-size:0.7rem;color:var(--accent);margin-bottom:1.2rem;line-height:1.7;}
 .admin-search-wrap{margin-bottom:1rem;display:flex;align-items:center;gap:0.6rem;}
-.admin-search-input{flex:1;max-width:320px;border:1px solid var(--border);background:var(--bg-low);padding:0.5rem 0.9rem;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.75rem;color:var(--ink);outline:none;transition:border-color 0.15s;}
+.admin-search-input{flex:1;max-width:480px;border:1px solid var(--border);background:var(--bg-low);padding:0.5rem 0.9rem;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.75rem;color:var(--ink);outline:none;transition:border-color 0.15s;}
 .admin-search-input:focus{border-color:var(--accent);}
 .admin-search-clear{background:none;border:none;color:var(--ink-lt);cursor:pointer;font-size:0.85rem;padding:0.2rem 0.4rem;transition:color 0.15s;}
 .admin-search-clear:hover{color:var(--ink);}
@@ -1067,7 +1067,7 @@ function renderAdminTable(data) {
       +'<td><span class="stock-badge '+sc+'">'+sl+'</span></td>'
       +'<td><input class="admin-input md" value="'+escHtml(p.etiqueta||'')+'" data-field="etiqueta" onchange="markChanged(this)" placeholder="SALE / NUEVO…"></td>'
       +'<td><input class="admin-input" style="width:220px" value="'+escHtml(p.link_imagenes||'')+'" data-field="link_imagenes" onchange="markChanged(this)" placeholder="https://drive.google.com/uc?..."></td>'
-      +'<td><input class="admin-input" style="width:180px" value="'+escHtml(p.descripcion_web||'')+'" data-field="descripcion_web" onchange="markChanged(this)" placeholder="Descripción..."></td>'
+      +'<td><input class="admin-input" style="width:180px" value="'+escHtml(p.descripcion_web||'')+'" data-field="descripcion_web" onchange="markChanged(this)" placeholder="Descripción..." style="width:280px"></td>'
       +'<td><button class="admin-toggle '+(isOn?'on':'')+'" onclick="toggleActivo(\''+p.id_producto+'\',this)" title="'+(isOn?'Visible':'Oculto')+'"></button></td>'
       +'<td style="white-space:nowrap;">'
       +'<button class="admin-save-btn" id="save-'+p.id_producto+'" onclick="saveRow(\''+p.id_producto+'\')" style="opacity:0.3;pointer-events:none;">Guardar</button>'
