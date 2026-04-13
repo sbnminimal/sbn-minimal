@@ -379,12 +379,11 @@ footer{background:var(--ink);padding:4rem 3rem;}
 <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>ID</th><th>Nombre</th><th>Categoría</th><th>Subtítulo Hero</th><th>Color</th><th>Precio ARS</th><th>Stock</th><th>Estado</th><th>Etiqueta</th><th>Link Imagen</th><th>Descripción Web</th><th>Visible</th><th>Acciones</th></tr></thead><tbody id="adminTableBody"></tbody></table></div>
 </div>
 
-</div></div>
-<div id="adminPedidosSection" style="display:none;padding:1rem 1.5rem;">
+<div id="adminPedidosSection" style="display:none;">
   <div class="admin-search-wrap">
     <input class="admin-search-input" type="text" id="pedidosSearch" placeholder="Buscar por nro de orden o producto..." oninput="filterPedidos(this.value)">
     <button class="admin-search-clear" onclick="document.getElementById('pedidosSearch').value='';filterPedidos('')">&#215;</button>
-    <span class="csv-info" id="pedidosCount"></span>
+    <span class="admin-search-count" id="pedidosCount"></span>
   </div>
   <div class="admin-table-wrap" style="margin-top:0.5rem;">
     <table class="admin-table" style="min-width:800px;">
@@ -395,7 +394,7 @@ footer{background:var(--ink);padding:4rem 3rem;}
     </table>
   </div>
 </div>
-</div>
+</div></div>
 
 <div class="csv-modal" id="csvModal">
   <div class="csv-box">
