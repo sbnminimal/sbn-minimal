@@ -1201,6 +1201,8 @@ function switchAdminTab(tab) {
   document.getElementById('adminPedidosSection').style.display = isProductos ? 'none' : 'block';
   document.getElementById('adminHelpBox').style.display = 'none';
   document.getElementById('adminChangePassWrap').style.display = 'none';
+  // Remove top padding when on pedidos so there's no blank space
+  document.querySelector('.admin-content').style.paddingTop = isProductos ? '' : '0';
   if (!isProductos) loadPedidos();
 }
 
