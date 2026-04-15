@@ -67,7 +67,10 @@ header{position:sticky;top:0;z-index:100;background:rgba(252,249,248,0.88);backd
 .filter-btn.active{background:var(--ink);border-color:var(--ink);color:#fff;}
 .products-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0 2.5rem;margin-top:4rem;margin-bottom:7rem;align-items:start;}
 .product-card{cursor:pointer;animation:fadeUp 0.4s ease both;}
-.product-card:nth-child(2),.product-card:nth-child(6),.product-card:nth-child(10),.product-card:nth-child(14){margin-top:5rem;}
+.product-card:nth-child(4n+1){margin-top:0;}
+.product-card:nth-child(4n+2){margin-top:4rem;}
+.product-card:nth-child(4n+3){margin-top:2rem;}
+.product-card:nth-child(4n+4){margin-top:6rem;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
 .product-card:hover .prod-img-wrap img{transform:scale(1.05);}
 .prod-img-wrap{aspect-ratio:4/5;overflow:hidden;background:var(--bg-low);position:relative;}
