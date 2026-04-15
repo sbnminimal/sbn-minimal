@@ -328,26 +328,13 @@ footer{background:var(--ink);padding:4rem 3rem;}
   <div class="summary-row"><span class="summary-label">Subtotal</span><span class="summary-val" id="cartSubtotal">$0</span></div>
   <div class="summary-row"><span class="summary-label">Envío</span><span class="summary-val" style="font-size:0.62rem;text-transform:uppercase;color:var(--ink-lt);">A convenir</span></div>
 </div>
-<div id="cartDesgloseTarjeta" style="display:none;margin-top:0.8rem;background:var(--bg-low);border:1px solid var(--border);padding:0.9rem 1rem;">
-  <div style="font-size:0.55rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--accent);margin-bottom:0.7rem;font-family:'Manrope',sans-serif;">Desglose link de pago</div>
-  <div style="display:flex;justify-content:space-between;align-items:center;padding:0.3rem 0;border-bottom:1px solid var(--border);">
-    <span style="font-size:0.68rem;color:var(--ink-mid);">Subtotal</span>
-    <span style="font-family:'Manrope',sans-serif;font-size:0.85rem;font-weight:300;" id="cartDesglose_base">$0</span>
-  </div>
-  <div id="cartDesglose_recargo_row" style="display:none;justify-content:space-between;align-items:center;padding:0.3rem 0;border-bottom:1px solid var(--border);">
-    <span style="font-size:0.68rem;color:var(--ink-mid);" id="cartDesglose_recargo_label">Recargo tarjeta</span>
-    <span style="font-family:'Manrope',sans-serif;font-size:0.85rem;font-weight:300;color:var(--ink-mid);" id="cartDesglose_recargo">$0</span>
-  </div>
-  <div id="cartDesglose_iva_row" style="display:none;justify-content:space-between;align-items:center;padding:0.3rem 0;border-bottom:1px solid var(--border);">
-    <span style="font-size:0.68rem;color:var(--ink-mid);" id="cartDesglose_iva_label">IVA</span>
-    <span style="font-family:'Manrope',sans-serif;font-size:0.85rem;font-weight:300;color:var(--ink-mid);" id="cartDesglose_iva">$0</span>
-  </div>
-  <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:0.6rem;margin-top:0.2rem;">
-    <span style="font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;font-weight:600;color:var(--ink);">Total tarjeta</span>
-    <span style="font-family:'Manrope',sans-serif;font-size:1.4rem;font-weight:200;color:var(--ink);" id="cartTotalTarjetaAmt">$0</span>
-  </div>
-</div>
 <div class="summary-total"><span class="total-label">Total</span><span class="total-amount" id="cartTotal">$0</span></div>
+<div id="cartDesgloseTarjeta" style="display:none;text-align:right;padding-top:0.5rem;border-top:1px solid var(--border);margin-top:0.3rem;">
+  <div id="cartDesglose_recargo_row" style="display:none;font-size:0.68rem;color:var(--ink-lt);margin-bottom:0.15rem;" id="cartDesglose_recargo_label_wrap"><span id="cartDesglose_recargo_label"></span> <span id="cartDesglose_recargo"></span></div>
+  <div id="cartDesglose_iva_row" style="display:none;font-size:0.68rem;color:var(--ink-lt);margin-bottom:0.4rem;"><span id="cartDesglose_iva_label"></span> <span id="cartDesglose_iva"></span></div>
+  <div style="font-family:'Manrope',sans-serif;font-size:1.6rem;font-weight:200;color:var(--ink);" id="cartTotalTarjetaAmt">$0</div>
+  <div style="font-size:0.55rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink-lt);">con tarjeta</div>
+</div>
 <div style="margin-bottom:0.8rem;">
   <div style="font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-mid);margin-bottom:0.5rem;">Método de pago</div>
   <div style="display:flex;gap:0.5rem;">
