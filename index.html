@@ -939,8 +939,11 @@ async function sendToWhatsApp() {
   sendBtn.innerHTML = origText;
 
   const note = document.getElementById('cartNote').value.trim();
-  const total = cart.reduce((s,c) => s+(Number(c.precio_venta)||0)*c.qty, 0);
   const nroOrden = await generarNroOrden();
+  const { totalTransf, totalTarjeta: totalConRecargo } = calcTotals();
+  const total = totalTransf;
+  const esTarjeta = metodoPago === 'tarjeta';
+  const totalFinal = esTarjeta ? totalConRecargo : totalTransf;
 
   let detalle = '';
   cart.forEach(it => {
@@ -948,11 +951,6 @@ async function sendToWhatsApp() {
     if (it.color) detalle += ' ('+it.color+')';
     detalle += ' x'+it.qty+' — $'+((Number(it.precio_venta)||0)*it.qty).toLocaleString('es-AR')+'\n';
   });
-
-  const esTarjeta = metodoPago === 'tarjeta';
-  const { totalTransf, totalTarjeta: totalConRecargo } = calcTotals();
-  const total = totalTransf;
-  const totalFinal = esTarjeta ? totalConRecargo : totalTransf;
 
   let msg = '\u00A1Hola! Me enamoré de algunos productos de SBN!\n\n';
   msg += '*Orden: '+nroOrden+'*\n\n';
