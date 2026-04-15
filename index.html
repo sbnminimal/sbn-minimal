@@ -359,7 +359,14 @@ footer{background:var(--ink);padding:4rem 3rem;}
     <input type="number" id="interesInput" min="0" max="100" step="0.1" value="0" style="width:70px;border:1px solid var(--border);padding:0.3rem 0.5rem;font-size:0.82rem;text-align:center;">
     <span style="font-size:0.82rem;color:var(--ink-mid);">%</span>
     <button class="admin-save-btn" onclick="saveInteres()">Guardar</button>
-    <span id="interesMsg" style="font-size:0.65rem;color:var(--ink-lt);"></span>
+    <span id="interesMsg" style="font-size:0.65rem;color:var(--ink-lt);margin-right:1rem;"></span>
+  </div>
+  <span style="font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink);font-weight:600;">IVA:</span>
+  <div style="display:flex;align-items:center;gap:0.4rem;">
+    <input type="number" id="ivaInput" min="0" max="100" step="0.1" value="0" style="width:70px;border:1px solid var(--border);padding:0.3rem 0.5rem;font-size:0.82rem;text-align:center;">
+    <span style="font-size:0.82rem;color:var(--ink-mid);">%</span>
+    <button class="admin-save-btn" onclick="saveIva()">Guardar</button>
+    <span id="ivaMsg" style="font-size:0.65rem;color:var(--ink-lt);"></span>
   </div>
 </div>
 <div id="adminHelpBox" style="display:none;background:var(--accent-lt);border:1px solid rgba(106,92,70,0.2);padding:1rem 1.2rem;font-size:0.72rem;color:var(--accent);margin-bottom:1rem;line-height:1.9;">
@@ -440,6 +447,7 @@ const SUPABASE_URL = 'https://mpdrpzhziibnafdjdqdb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wZHJwemh6aWlibmFmZGpkcWRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNTgxOTgsImV4cCI6MjA5MDgzNDE5OH0.Dvi_xq6ZV4MBQ1u3KbDNKxngaVeIWeCs7Ih7KbC39lA';
 const CONFIG      = { whatsapp: '541126647783' };
 let INTERES_TARJETA = 0; // % loaded from Supabase config
+let IVA = 0; // % loaded from Supabase config
 
 let products = [], cart = JSON.parse(localStorage.getItem('sbn_cart') || '[]'), activeFilter = 'todos';
 let currentDetailProduct = null;
@@ -549,10 +557,11 @@ function renderDetailPage(p) {
   document.getElementById('detail-name').textContent = p.nombre_variante;
   document.getElementById('detail-color').textContent = p.color || '';
   const precioTransf = Number(p.precio_venta);
-  const precioTarjeta = Math.round(precioTransf * (1 + INTERES_TARJETA / 100));
+  const precioTarjeta = Math.round(precioTransf * (1 + INTERES_TARJETA / 100) * (1 + IVA / 100));
   let priceHtml = '<div style="margin-bottom:0.3rem;">$' + precioTransf.toLocaleString('es-AR') + '<sub style="font-size:0.65rem;color:var(--ink-lt);margin-left:4px;">Transferencia</sub></div>';
-  if (INTERES_TARJETA > 0) {
-    priceHtml += '<div style="font-size:1.1rem;color:var(--ink-mid);">$' + precioTarjeta.toLocaleString('es-AR') + '<sub style="font-size:0.65rem;color:var(--ink-lt);margin-left:4px;">Tarjeta ('+INTERES_TARJETA+'% recargo)</sub></div>';
+  if (INTERES_TARJETA > 0 || IVA > 0) {
+    const labelExtra = [INTERES_TARJETA > 0 ? INTERES_TARJETA+'% recargo' : '', IVA > 0 ? 'IVA '+IVA+'%' : ''].filter(Boolean).join(' + ');
+    priceHtml += '<div style="font-size:1.1rem;color:var(--ink-mid);">$' + precioTarjeta.toLocaleString('es-AR') + '<sub style="font-size:0.65rem;color:var(--ink-lt);margin-left:4px;">Tarjeta ('+labelExtra+')</sub></div>';
   }
   document.getElementById('detail-price').innerHTML = priceHtml;
   document.getElementById('detail-desc').textContent = p.descripcion_web || '';
@@ -599,8 +608,11 @@ async function init() {
     statusEl.textContent = products.length + ' productos';
     // Load interes tarjeta
     try {
-      const cfg = await sbFetch('config?clave=eq.interes_tarjeta&select=valor');
-      if (cfg && cfg.length > 0) INTERES_TARJETA = parseFloat(cfg[0].valor) || 0;
+      const cfgs = await sbFetch('config?clave=in.(interes_tarjeta,iva)&select=clave,valor');
+      if (cfgs) cfgs.forEach(c => {
+        if (c.clave === 'interes_tarjeta') INTERES_TARJETA = parseFloat(c.valor) || 0;
+        if (c.clave === 'iva') IVA = parseFloat(c.valor) || 0;
+      });
     } catch(e) {}
   } catch(e) {
     statusEl.textContent = 'Error de conexión';
@@ -808,13 +820,27 @@ function saveCart() {
   localStorage.setItem('sbn_cart', JSON.stringify(cart));
   document.getElementById('cartCount').textContent = cart.reduce((s,c) => s+c.qty, 0);
 }
+function calcTotals() {
+  const totalTransf = cart.reduce((s,c) => s+(Number(c.precio_venta)||0)*c.qty, 0);
+  const totalTarjeta = Math.round(totalTransf * (1 + INTERES_TARJETA / 100) * (1 + IVA / 100));
+  return { totalTransf, totalTarjeta };
+}
 function renderCart() {
   const count = cart.reduce((s,c) => s+c.qty, 0);
   document.getElementById('cartCount').textContent = count;
   document.getElementById('cartCountLabel').textContent = count + ' ' + (count===1?'ítem':'ítems');
-  const total = cart.reduce((s,c) => s+(Number(c.precio_venta)||0)*c.qty, 0);
-  document.getElementById('cartSubtotal').textContent = '$' + total.toLocaleString('es-AR');
-  document.getElementById('cartTotal').textContent = '$' + total.toLocaleString('es-AR');
+  const { totalTransf, totalTarjeta } = calcTotals();
+  document.getElementById('cartSubtotal').textContent = '$' + totalTransf.toLocaleString('es-AR');
+  document.getElementById('cartTotal').textContent = '$' + totalTransf.toLocaleString('es-AR');
+  // Update tarjeta total display
+  const tarjetaEl = document.getElementById('cartTotalTarjeta');
+  if (tarjetaEl && metodoPago === 'tarjeta') {
+    tarjetaEl.style.display = 'block';
+    const label = [INTERES_TARJETA > 0 ? '+'+INTERES_TARJETA+'% recargo' : '', IVA > 0 ? '+IVA '+IVA+'%' : ''].filter(Boolean).join(' ');
+    tarjetaEl.textContent = '$' + totalTarjeta.toLocaleString('es-AR') + ' tarjeta ' + label;
+  } else if (tarjetaEl) {
+    tarjetaEl.style.display = 'none';
+  }
   document.getElementById('sendBtn').disabled = !cart.length;
   const el = document.getElementById('cartItems');
   if (!cart.length) { el.innerHTML = '<div class="cart-empty"><div style="font-size:2rem">&#128717;</div><p>Tu carrito está vacío</p></div>'; return; }
@@ -924,14 +950,17 @@ async function sendToWhatsApp() {
   });
 
   const esTarjeta = metodoPago === 'tarjeta';
-  const totalFinal = esTarjeta ? Math.round(total * (1 + INTERES_TARJETA / 100)) : total;
+  const { totalTransf, totalTarjeta: totalConRecargo } = calcTotals();
+  const total = totalTransf;
+  const totalFinal = esTarjeta ? totalConRecargo : totalTransf;
 
   let msg = '\u00A1Hola! Me enamoré de algunos productos de SBN!\n\n';
   msg += '*Orden: '+nroOrden+'*\n\n';
   msg += 'Mi pedido:\n\n' + detalle;
   msg += '\n*Total transferencia: $'+total.toLocaleString('es-AR')+' ARS*';
-  if (esTarjeta && INTERES_TARJETA > 0) {
-    msg += '\n*Total link de pago: $'+totalFinal.toLocaleString('es-AR')+' ARS* (+'+INTERES_TARJETA+'% recargo)';
+  if (esTarjeta && (INTERES_TARJETA > 0 || IVA > 0)) {
+    const label = [INTERES_TARJETA > 0 ? '+'+INTERES_TARJETA+'% recargo' : '', IVA > 0 ? '+IVA '+IVA+'%' : ''].filter(Boolean).join(' ');
+    msg += '\n*Total link de pago: $'+totalFinal.toLocaleString('es-AR')+' ARS* ('+label+')';
   }
   msg += '\n*Método de pago: '+(esTarjeta ? 'Link de pago (tarjeta)' : 'Transferencia')+'*';
   msg += '\n\n\u00BFMe podés confirmar disponibilidad y '+(esTarjeta?'el link de pago':'los datos para transferir')+'? \u00A1Gracias!';
@@ -976,22 +1005,14 @@ function selectPago(metodo) {
   metodoPago = metodo;
   const btnT = document.getElementById('btnTransferencia');
   const btnL = document.getElementById('btnTarjeta');
-  const totalTarjeta = document.getElementById('cartTotalTarjeta');
   if (metodo === 'transferencia') {
     if (btnT) { btnT.style.background='var(--ink)'; btnT.style.color='#fff'; btnT.style.borderColor='var(--ink)'; }
     if (btnL) { btnL.style.background='none'; btnL.style.color='var(--ink-mid)'; btnL.style.borderColor='var(--border)'; }
-    if (totalTarjeta) totalTarjeta.style.display='none';
   } else {
     if (btnL) { btnL.style.background='var(--ink)'; btnL.style.color='#fff'; btnL.style.borderColor='var(--ink)'; }
     if (btnT) { btnT.style.background='none'; btnT.style.color='var(--ink-mid)'; btnT.style.borderColor='var(--border)'; }
-    // Show tarjeta total
-    const total = cart.reduce((s,c) => s+(Number(c.precio_venta)||0)*c.qty, 0);
-    const totalConInteres = Math.round(total * (1 + INTERES_TARJETA / 100));
-    if (totalTarjeta) {
-      totalTarjeta.style.display = 'block';
-      totalTarjeta.textContent = '$' + totalConInteres.toLocaleString('es-AR') + ' con tarjeta (+'+INTERES_TARJETA+'%)';
-    }
   }
+  renderCart(); // re-render to update totals
 }
 function toggleCart() {
   document.getElementById('cartOverlay').classList.toggle('open');
@@ -1102,20 +1123,23 @@ async function changeAdminPassword() {
 }
 async function saveInteres() {
   const val = parseFloat(document.getElementById('interesInput').value);
-  if (isNaN(val) || val < 0 || val > 100) {
-    document.getElementById('interesMsg').textContent = 'Valor inválido';
-    return;
-  }
+  if (isNaN(val) || val < 0 || val > 100) { document.getElementById('interesMsg').textContent = 'Valor inválido'; return; }
   try {
-    await sbFetch('config?clave=eq.interes_tarjeta', {
-      method: 'PATCH', body: JSON.stringify({valor: String(val)}), headers: {'Prefer': 'return=minimal'}
-    });
+    await sbFetch('config?clave=eq.interes_tarjeta', { method:'PATCH', body:JSON.stringify({valor:String(val)}), headers:{'Prefer':'return=minimal'} });
     INTERES_TARJETA = val;
     document.getElementById('interesMsg').textContent = '✓ Guardado';
     setTimeout(() => document.getElementById('interesMsg').textContent = '', 2000);
-  } catch(e) {
-    document.getElementById('interesMsg').textContent = 'Error: ' + e.message;
-  }
+  } catch(e) { document.getElementById('interesMsg').textContent = 'Error: '+e.message; }
+}
+async function saveIva() {
+  const val = parseFloat(document.getElementById('ivaInput').value);
+  if (isNaN(val) || val < 0 || val > 100) { document.getElementById('ivaMsg').textContent = 'Valor inválido'; return; }
+  try {
+    await sbFetch('config?clave=eq.iva', { method:'PATCH', body:JSON.stringify({valor:String(val)}), headers:{'Prefer':'return=minimal'} });
+    IVA = val;
+    document.getElementById('ivaMsg').textContent = '✓ Guardado';
+    setTimeout(() => document.getElementById('ivaMsg').textContent = '', 2000);
+  } catch(e) { document.getElementById('ivaMsg').textContent = 'Error: '+e.message; }
 }
 function filterAdminTable(query) {
   const q = query.trim().toLowerCase();
@@ -1139,12 +1163,11 @@ function clearAdminSearch() {
 async function loadAdminTable() {
   // Load interes tarjeta into admin input
   try {
-    const cfg = await sbFetch('config?clave=eq.interes_tarjeta&select=valor');
-    if (cfg && cfg.length > 0) {
-      INTERES_TARJETA = parseFloat(cfg[0].valor) || 0;
-      const inp = document.getElementById('interesInput');
-      if (inp) inp.value = INTERES_TARJETA;
-    }
+    const cfgs = await sbFetch('config?clave=in.(interes_tarjeta,iva)&select=clave,valor');
+    if (cfgs) cfgs.forEach(c => {
+      if (c.clave === 'interes_tarjeta') { INTERES_TARJETA = parseFloat(c.valor)||0; const i=document.getElementById('interesInput'); if(i) i.value=INTERES_TARJETA; }
+      if (c.clave === 'iva') { IVA = parseFloat(c.valor)||0; const i=document.getElementById('ivaInput'); if(i) i.value=IVA; }
+    });
   } catch(e) {}
   showAdminStatus('Cargando...', 'info');
   try {
@@ -1348,16 +1371,27 @@ function renderPedidos(data) {
       +'<td style="font-size:0.68rem;max-width:120px;">'+escHtml(p.nota||'')+'</td>'
       +'<td><select class="admin-select" data-pid="'+p.id+'" data-field="estado" onchange="updatePedidoFromEl(this)">'+estadoOpts+'</select></td>'
       +'<td><input class="admin-input" style="width:160px" value="'+escHtml(p.direccion_entrega||'')+'" placeholder="Dirección..." data-pid="'+p.id+'" data-field="direccion_entrega" onchange="updatePedidoFromEl(this)"></td>'
-      +'<td><button class="admin-del-btn" onclick="deletePedido('+p.id+')" title="Eliminar">&#128465;</button></td>'
+      +'<td style="white-space:nowrap;"><button class="admin-save-btn" id="psave-'+p.id+'" onclick="savePedidoRow('+p.id+')" style="opacity:0.3;pointer-events:none;">Guardar</button> <button class="admin-del-btn" onclick="deletePedido('+p.id+')" title="Eliminar">&#128465;</button></td>'
       +'</tr>';
   }).join('') || '<tr><td colspan="8" style="padding:2rem;text-align:center;color:var(--ink-lt);">No hay pedidos aún.</td></tr>';
 }
 
 function updatePedidoFromEl(el) {
   const id = el.dataset.pid;
-  const field = el.dataset.field;
-  const value = el.value;
-  updatePedido(id, field, value);
+  const btn = document.getElementById('psave-'+id);
+  if (btn) { btn.style.opacity='1'; btn.style.pointerEvents='all'; }
+}
+async function savePedidoRow(id) {
+  const row = document.getElementById('prow-'+id); if (!row) return;
+  const btn = document.getElementById('psave-'+id);
+  btn.textContent = '...';
+  const updates = {};
+  row.querySelectorAll('[data-field]').forEach(el => { updates[el.dataset.field] = el.value || el.options?.[el.selectedIndex]?.value || ''; });
+  try {
+    await sbFetch('pedidos?id=eq.'+id, { method:'PATCH', body:JSON.stringify(updates), headers:{'Prefer':'return=minimal'} });
+    showAdminStatus('Pedido actualizado', 'ok');
+    btn.textContent = 'Guardar'; btn.style.opacity='0.3'; btn.style.pointerEvents='none';
+  } catch(e) { showAdminStatus('Error: '+e.message, 'err'); btn.textContent='Guardar'; }
 }
 async function updatePedido(id, field, value) {
   try {
