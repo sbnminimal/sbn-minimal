@@ -323,8 +323,31 @@ footer{background:var(--ink);padding:4rem 3rem;}
 <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
 <div class="cart-drawer" id="cartDrawer"><div class="cart-header"><div class="cart-header-left"><h2>Tu Carrito</h2><p id="cartCountLabel">0 ítems</p></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem;"><button class="close-btn" onclick="toggleCart()">&#215;</button><button class="clear-cart-btn" onclick="clearCart()">Limpiar carrito</button></div></div>
 <div class="cart-ítems" id="cartItems"></div>
-<div class="cart-summary"><div class="summary-rows"><div class="summary-row"><span class="summary-label">Subtotal</span><span class="summary-val" id="cartSubtotal">$0</span></div><div class="summary-row"><span class="summary-label">Envío</span><span class="summary-val" style="font-size:0.62rem;text-transform:uppercase;color:var(--ink-lt);">A convenir</span></div></div>
-<div class="summary-total"><span class="total-label">Total</span><div><span class="total-amount" id="cartTotal">$0</span><div id="cartTotalTarjeta" style="display:none;font-size:0.75rem;color:var(--ink-lt);margin-top:0.2rem;"></div></div></div>
+<div class="cart-summary">
+<div class="summary-rows">
+  <div class="summary-row"><span class="summary-label">Subtotal</span><span class="summary-val" id="cartSubtotal">$0</span></div>
+  <div class="summary-row"><span class="summary-label">Envío</span><span class="summary-val" style="font-size:0.62rem;text-transform:uppercase;color:var(--ink-lt);">A convenir</span></div>
+</div>
+<div id="cartDesgloseTarjeta" style="display:none;margin-top:0.8rem;background:var(--bg-low);border:1px solid var(--border);padding:0.9rem 1rem;">
+  <div style="font-size:0.55rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--accent);margin-bottom:0.7rem;font-family:'Manrope',sans-serif;">Desglose link de pago</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:0.3rem 0;border-bottom:1px solid var(--border);">
+    <span style="font-size:0.68rem;color:var(--ink-mid);">Subtotal</span>
+    <span style="font-family:'Manrope',sans-serif;font-size:0.85rem;font-weight:300;" id="cartDesglose_base">$0</span>
+  </div>
+  <div id="cartDesglose_recargo_row" style="display:none;justify-content:space-between;align-items:center;padding:0.3rem 0;border-bottom:1px solid var(--border);">
+    <span style="font-size:0.68rem;color:var(--ink-mid);" id="cartDesglose_recargo_label">Recargo tarjeta</span>
+    <span style="font-family:'Manrope',sans-serif;font-size:0.85rem;font-weight:300;color:var(--ink-mid);" id="cartDesglose_recargo">$0</span>
+  </div>
+  <div id="cartDesglose_iva_row" style="display:none;justify-content:space-between;align-items:center;padding:0.3rem 0;border-bottom:1px solid var(--border);">
+    <span style="font-size:0.68rem;color:var(--ink-mid);" id="cartDesglose_iva_label">IVA</span>
+    <span style="font-family:'Manrope',sans-serif;font-size:0.85rem;font-weight:300;color:var(--ink-mid);" id="cartDesglose_iva">$0</span>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:0.6rem;margin-top:0.2rem;">
+    <span style="font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;font-weight:600;color:var(--ink);">Total tarjeta</span>
+    <span style="font-family:'Manrope',sans-serif;font-size:1.4rem;font-weight:200;color:var(--ink);" id="cartTotalTarjetaAmt">$0</span>
+  </div>
+</div>
+<div class="summary-total"><span class="total-label">Total</span><span class="total-amount" id="cartTotal">$0</span></div>
 <div style="margin-bottom:0.8rem;">
   <div style="font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-mid);margin-bottom:0.5rem;">Método de pago</div>
   <div style="display:flex;gap:0.5rem;">
@@ -831,15 +854,36 @@ function renderCart() {
   document.getElementById('cartCountLabel').textContent = count + ' ' + (count===1?'ítem':'ítems');
   const { totalTransf, totalTarjeta } = calcTotals();
   document.getElementById('cartSubtotal').textContent = '$' + totalTransf.toLocaleString('es-AR');
-  document.getElementById('cartTotal').textContent = '$' + totalTransf.toLocaleString('es-AR');
-  // Update tarjeta total display
-  const tarjetaEl = document.getElementById('cartTotalTarjeta');
-  if (tarjetaEl && metodoPago === 'tarjeta') {
-    tarjetaEl.style.display = 'block';
-    const label = [INTERES_TARJETA > 0 ? '+'+INTERES_TARJETA+'% recargo' : '', IVA > 0 ? '+IVA '+IVA+'%' : ''].filter(Boolean).join(' ');
-    tarjetaEl.textContent = '$' + totalTarjeta.toLocaleString('es-AR') + ' tarjeta ' + label;
-  } else if (tarjetaEl) {
-    tarjetaEl.style.display = 'none';
+
+  const desglose = document.getElementById('cartDesgloseTarjeta');
+  if (metodoPago === 'tarjeta' && (INTERES_TARJETA > 0 || IVA > 0)) {
+    const recargo = Math.round(totalTransf * INTERES_TARJETA / 100);
+    const baseConRecargo = totalTransf + recargo;
+    const montoIva = Math.round(baseConRecargo * IVA / 100);
+
+    document.getElementById('cartDesglose_base').textContent = '$' + totalTransf.toLocaleString('es-AR');
+
+    const recargoRow = document.getElementById('cartDesglose_recargo_row');
+    if (INTERES_TARJETA > 0) {
+      recargoRow.style.display = 'flex';
+      document.getElementById('cartDesglose_recargo_label').textContent = 'Recargo tarjeta (' + INTERES_TARJETA + '%)';
+      document.getElementById('cartDesglose_recargo').textContent = '+$' + recargo.toLocaleString('es-AR');
+    } else { recargoRow.style.display = 'none'; }
+
+    const ivaRow = document.getElementById('cartDesglose_iva_row');
+    if (IVA > 0) {
+      ivaRow.style.display = 'flex';
+      document.getElementById('cartDesglose_iva_label').textContent = 'IVA (' + IVA + '%)';
+      document.getElementById('cartDesglose_iva').textContent = '+$' + montoIva.toLocaleString('es-AR');
+    } else { ivaRow.style.display = 'none'; }
+
+    if (desglose) desglose.style.display = 'block';
+    const amtEl = document.getElementById('cartTotalTarjetaAmt');
+    if (amtEl) amtEl.textContent = '$' + totalTarjeta.toLocaleString('es-AR');
+    document.getElementById('cartTotal').textContent = '$' + totalTransf.toLocaleString('es-AR');
+  } else {
+    if (desglose) desglose.style.display = 'none';
+    document.getElementById('cartTotal').textContent = '$' + totalTransf.toLocaleString('es-AR');
   }
   document.getElementById('sendBtn').disabled = !cart.length;
   const el = document.getElementById('cartItems');
