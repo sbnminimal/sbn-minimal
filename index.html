@@ -570,7 +570,7 @@ function renderDetailPage(p) {
   const precioTransf = Number(p.precio_venta);
   const precioTarjeta = Math.round(precioTransf * (1 + INTERES_TARJETA / 100) * (1 + IVA / 100));
   let priceHtml = '<div style="margin-bottom:0.3rem;">$' + precioTransf.toLocaleString('es-AR') + '<sub style="font-size:0.65rem;color:var(--ink-lt);margin-left:4px;">Transferencia</sub></div>';
-  if (INTERES_TARJETA > 0 || IVA > 0) {
+  if (INTERES_TARJETA > 0 || IVA > 0) { // show card price
     const labelExtra = [INTERES_TARJETA > 0 ? INTERES_TARJETA+'% recargo' : '', IVA > 0 ? 'IVA '+IVA+'%' : ''].filter(Boolean).join(' + ');
     priceHtml += '<div style="font-size:1.1rem;color:var(--ink-mid);">$' + precioTarjeta.toLocaleString('es-AR') + '<sub style="font-size:0.65rem;color:var(--ink-lt);margin-left:4px;">Tarjeta ('+labelExtra+')</sub></div>';
   }
@@ -844,34 +844,35 @@ function renderCart() {
   document.getElementById('cartSubtotal').textContent = '$' + totalTransf.toLocaleString('es-AR');
 
   const desglose = document.getElementById('cartDesgloseTarjeta');
-  if (metodoPago === 'tarjeta' && (INTERES_TARJETA > 0 || IVA > 0)) {
+  try { if (metodoPago === 'tarjeta' && (INTERES_TARJETA > 0 || IVA > 0)) {
     const recargo = Math.round(totalTransf * INTERES_TARJETA / 100);
     const baseConRecargo = totalTransf + recargo;
     const montoIva = Math.round(baseConRecargo * IVA / 100);
 
-    document.getElementById('cartDesglose_base').textContent = '$' + totalTransf.toLocaleString('es-AR');
+    const setEl = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val; };
+    const showEl = (id, show) => { const e = document.getElementById(id); if(e) e.style.display = show ? 'block' : 'none'; };
 
-    const recargoRow = document.getElementById('cartDesglose_recargo_row');
+    setEl('cartDesglose_base', '$' + totalTransf.toLocaleString('es-AR'));
+    showEl('cartDesglose_recargo_row', INTERES_TARJETA > 0);
     if (INTERES_TARJETA > 0) {
-      recargoRow.style.display = 'block';
-      document.getElementById('cartDesglose_recargo_label').textContent = 'Recargo tarjeta (' + INTERES_TARJETA + '%)';
-      document.getElementById('cartDesglose_recargo').textContent = '+$' + recargo.toLocaleString('es-AR');
-    } else { recargoRow.style.display = 'none'; }
-
-    const ivaRow = document.getElementById('cartDesglose_iva_row');
+      setEl('cartDesglose_recargo_label', 'Recargo tarjeta (' + INTERES_TARJETA + '%)');
+      setEl('cartDesglose_recargo', '+$' + recargo.toLocaleString('es-AR'));
+    }
+    showEl('cartDesglose_iva_row', IVA > 0);
     if (IVA > 0) {
-      ivaRow.style.display = 'block';
-      document.getElementById('cartDesglose_iva_label').textContent = 'IVA (' + IVA + '%)';
-      document.getElementById('cartDesglose_iva').textContent = '+$' + montoIva.toLocaleString('es-AR');
-    } else { ivaRow.style.display = 'none'; }
-
+      setEl('cartDesglose_iva_label', 'IVA (' + IVA + '%)');
+      setEl('cartDesglose_iva', '+$' + montoIva.toLocaleString('es-AR'));
+    }
     if (desglose) desglose.style.display = 'block';
-    const amtEl = document.getElementById('cartTotalTarjetaAmt');
-    if (amtEl) amtEl.textContent = '$' + totalTarjeta.toLocaleString('es-AR');
+    setEl('cartTotalTarjetaAmt', '$' + totalTarjeta.toLocaleString('es-AR'));
     document.getElementById('cartTotal').textContent = '$' + totalTransf.toLocaleString('es-AR');
   } else {
     if (desglose) desglose.style.display = 'none';
     document.getElementById('cartTotal').textContent = '$' + totalTransf.toLocaleString('es-AR');
+  } } catch(e) {
+    // desglose not visible, just update total
+    const ct = document.getElementById('cartTotal');
+    if (ct) ct.textContent = '$' + totalTransf.toLocaleString('es-AR');
   }
   document.getElementById('sendBtn').disabled = !cart.length;
   const el = document.getElementById('cartItems');
@@ -893,7 +894,7 @@ function renderCart() {
       +'</div><button class="ci-rm" onclick="removeFromCart(\''+ref+'\')">&#215;</button></div>'
       +'<div class="ci-bottom"><div class="ci-qty">'
       +'<button class="qty-btn" onclick="updateQty(\''+ref+'\',-1)">&#8722;</button>'
-      +'<span class="qty-num">'+String(item.qty).padStart(2,'0')+'</span>'
+      +'<span class="qty-num">'+item.qty+'</span>'
       +'<button class="qty-btn" onclick="updateQty(\''+ref+'\',1)">+</button>'
       +'</div><div class="ci-price">$'+(price*item.qty).toLocaleString('es-AR')+'</div>'
       +'</div></div></div>';
