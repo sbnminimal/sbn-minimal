@@ -330,8 +330,9 @@ footer{background:var(--ink);padding:4rem 3rem;}
 </div>
 <div class="summary-total"><span class="total-label">Total</span><span class="total-amount" id="cartTotal">$0</span></div>
 <div id="cartDesgloseTarjeta" style="display:none;text-align:right;padding-top:0.5rem;border-top:1px solid var(--border);margin-top:0.3rem;">
-  <div id="cartDesglose_recargo_row" style="display:none;font-size:0.68rem;color:var(--ink-lt);margin-bottom:0.15rem;" id="cartDesglose_recargo_label_wrap"><span id="cartDesglose_recargo_label"></span> <span id="cartDesglose_recargo"></span></div>
-  <div id="cartDesglose_iva_row" style="display:none;font-size:0.68rem;color:var(--ink-lt);margin-bottom:0.4rem;"><span id="cartDesglose_iva_label"></span> <span id="cartDesglose_iva"></span></div>
+  <div id="cartDesglose_recargo_row" style="display:none;font-size:0.68rem;color:var(--ink-lt);margin-bottom:0.15rem;"><span id="cartDesglose_recargo_label"></span>&nbsp;<span id="cartDesglose_recargo"></span></div>
+  <div id="cartDesglose_iva_row" style="display:none;font-size:0.68rem;color:var(--ink-lt);margin-bottom:0.4rem;"><span id="cartDesglose_iva_label"></span>&nbsp;<span id="cartDesglose_iva"></span></div>
+  <div id="cartDesglose_base" style="display:none;"></div>
   <div style="font-family:'Manrope',sans-serif;font-size:1.6rem;font-weight:200;color:var(--ink);" id="cartTotalTarjetaAmt">$0</div>
   <div style="font-size:0.55rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink-lt);">con tarjeta</div>
 </div>
@@ -852,14 +853,14 @@ function renderCart() {
 
     const recargoRow = document.getElementById('cartDesglose_recargo_row');
     if (INTERES_TARJETA > 0) {
-      recargoRow.style.display = 'flex';
+      recargoRow.style.display = 'block';
       document.getElementById('cartDesglose_recargo_label').textContent = 'Recargo tarjeta (' + INTERES_TARJETA + '%)';
       document.getElementById('cartDesglose_recargo').textContent = '+$' + recargo.toLocaleString('es-AR');
     } else { recargoRow.style.display = 'none'; }
 
     const ivaRow = document.getElementById('cartDesglose_iva_row');
     if (IVA > 0) {
-      ivaRow.style.display = 'flex';
+      ivaRow.style.display = 'block';
       document.getElementById('cartDesglose_iva_label').textContent = 'IVA (' + IVA + '%)';
       document.getElementById('cartDesglose_iva').textContent = '+$' + montoIva.toLocaleString('es-AR');
     } else { ivaRow.style.display = 'none'; }
