@@ -332,12 +332,12 @@ footer{background:var(--ink);padding:4rem 3rem;}
   <div class="summary-row"><span class="summary-label">Envío</span><span class="summary-val" style="font-size:0.62rem;text-transform:uppercase;color:var(--ink-lt);">A convenir</span></div>
 </div>
 <div class="summary-total"><span class="total-label">Total</span><span class="total-amount" id="cartTotal">$0</span></div>
-<div id="cartDesgloseTarjeta" style="display:none;text-align:right;padding-top:0.5rem;border-top:1px solid var(--border);margin-top:0.3rem;">
-  <div id="cartDesglose_recargo_row" style="display:none;font-size:0.68rem;color:var(--ink-lt);margin-bottom:0.15rem;"><span id="cartDesglose_recargo_label"></span>&nbsp;<span id="cartDesglose_recargo"></span></div>
-  <div id="cartDesglose_iva_row" style="display:none;font-size:0.68rem;color:var(--ink-lt);margin-bottom:0.4rem;"><span id="cartDesglose_iva_label"></span>&nbsp;<span id="cartDesglose_iva"></span></div>
+<div id="cartDesgloseTarjeta" style="display:none;display:flex;justify-content:space-between;align-items:baseline;padding-top:0.5rem;border-top:1px solid var(--border);margin-top:0.3rem;">
+  <span id="cartDesgloseLabel" style="font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-lt);">Recargo tarjeta</span>
+  <span id="cartTotalTarjetaAmt" style="font-family:'Manrope',sans-serif;font-size:2rem;font-weight:200;color:var(--ink);">$0</span>
   <div id="cartDesglose_base" style="display:none;"></div>
-  <div style="font-family:'Manrope',sans-serif;font-size:1.6rem;font-weight:200;color:var(--ink);" id="cartTotalTarjetaAmt">$0</div>
-  <div style="font-size:0.55rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink-lt);">con tarjeta</div>
+  <div id="cartDesglose_recargo_row" style="display:none;"><span id="cartDesglose_recargo_label"></span><span id="cartDesglose_recargo"></span></div>
+  <div id="cartDesglose_iva_row" style="display:none;"><span id="cartDesglose_iva_label"></span><span id="cartDesglose_iva"></span></div>
 </div>
 <div style="margin-bottom:0.8rem;">
   <div style="font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-mid);margin-bottom:0.5rem;">Método de pago</div>
@@ -853,21 +853,13 @@ function renderCart() {
     const montoIva = Math.round(baseConRecargo * IVA / 100);
 
     const setEl = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val; };
-    const showEl = (id, show) => { const e = document.getElementById(id); if(e) e.style.display = show ? 'block' : 'none'; };
-
-    setEl('cartDesglose_base', '$' + totalTransf.toLocaleString('es-AR'));
-    showEl('cartDesglose_recargo_row', INTERES_TARJETA > 0);
-    if (INTERES_TARJETA > 0) {
-      setEl('cartDesglose_recargo_label', 'Recargo tarjeta (' + INTERES_TARJETA + '%)');
-      setEl('cartDesglose_recargo', '+$' + recargo.toLocaleString('es-AR'));
-    }
-    showEl('cartDesglose_iva_row', IVA > 0);
-    if (IVA > 0) {
-      setEl('cartDesglose_iva_label', 'IVA (' + IVA + '%)');
-      setEl('cartDesglose_iva', '+$' + montoIva.toLocaleString('es-AR'));
-    }
-    if (desglose) desglose.style.display = 'block';
+    // Build label: "Recargo tarjeta (4.9% + IVA 21%)"
+    const labelParts = [];
+    if (INTERES_TARJETA > 0) labelParts.push(INTERES_TARJETA + '%');
+    if (IVA > 0) labelParts.push('IVA ' + IVA + '%');
+    setEl('cartDesgloseLabel', 'Recargo tarjeta (' + labelParts.join(' + ') + ')');
     setEl('cartTotalTarjetaAmt', '$' + totalTarjeta.toLocaleString('es-AR'));
+    if (desglose) desglose.style.display = 'flex';
     document.getElementById('cartTotal').textContent = '$' + totalTransf.toLocaleString('es-AR');
   } else {
     if (desglose) desglose.style.display = 'none';
