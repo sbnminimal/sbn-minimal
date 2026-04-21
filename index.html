@@ -333,7 +333,7 @@ footer{background:var(--ink);padding:4rem 3rem;}
 </div>
 <div class="summary-total"><span class="total-label">Total</span><span class="total-amount" id="cartTotal">$0</span></div>
 <div id="cartDesgloseTarjeta" style="display:none;display:flex;justify-content:space-between;align-items:baseline;padding-top:0.5rem;border-top:1px solid var(--border);margin-top:0.3rem;">
-  <span id="cartDesgloseLabel" class="total-label" style="text-transform:none;">Total Link de Pago</span>
+  <span id="cartDesgloseLabel" class="total-label">TOTAL LINK DE PAGO</span>
   <span id="cartTotalTarjetaAmt" style="font-family:'Manrope',sans-serif;font-size:2.2rem;font-weight:200;color:var(--ink);">$0</span>
   <div id="cartDesglose_base" style="display:none;"></div>
   <div id="cartDesglose_recargo_row" style="display:none;"><span id="cartDesglose_recargo_label"></span><span id="cartDesglose_recargo"></span></div>
@@ -855,7 +855,7 @@ function renderCart() {
 
     const setEl = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val; };
     // Build label: "Recargo tarjeta (4.9% + IVA 21%)"
-    setEl('cartDesgloseLabel', 'Total Link de Pago');
+    setEl('cartDesgloseLabel', 'TOTAL LINK DE PAGO');
     setEl('cartTotalTarjetaAmt', '$' + totalTarjeta.toLocaleString('es-AR'));
     if (desglose) desglose.style.display = 'flex';
     document.getElementById('cartTotal').textContent = '$' + totalTransf.toLocaleString('es-AR');
