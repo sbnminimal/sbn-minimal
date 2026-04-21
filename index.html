@@ -333,8 +333,8 @@ footer{background:var(--ink);padding:4rem 3rem;}
 </div>
 <div class="summary-total"><span class="total-label">Total</span><span class="total-amount" id="cartTotal">$0</span></div>
 <div id="cartDesgloseTarjeta" style="display:none;display:flex;justify-content:space-between;align-items:baseline;padding-top:0.5rem;border-top:1px solid var(--border);margin-top:0.3rem;">
-  <span id="cartDesgloseLabel" style="font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-lt);">Recargo tarjeta</span>
-  <span id="cartTotalTarjetaAmt" style="font-family:'Manrope',sans-serif;font-size:2rem;font-weight:200;color:var(--ink);">$0</span>
+  <span id="cartDesgloseLabel" style="font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-mid);">Recargo tarjeta</span>
+  <span id="cartTotalTarjetaAmt" style="font-family:'Manrope',sans-serif;font-size:2.2rem;font-weight:200;color:var(--ink);">$0</span>
   <div id="cartDesglose_base" style="display:none;"></div>
   <div id="cartDesglose_recargo_row" style="display:none;"><span id="cartDesglose_recargo_label"></span><span id="cartDesglose_recargo"></span></div>
   <div id="cartDesglose_iva_row" style="display:none;"><span id="cartDesglose_iva_label"></span><span id="cartDesglose_iva"></span></div>
@@ -366,7 +366,7 @@ footer{background:var(--ink);padding:4rem 3rem;}
 </div>
 <div class="admin-overlay" id="adminOverlay"><div class="admin-login"><h2>Panel Admin</h2><p>SBN &middot; Acceso restringido</p><input class="admin-pwd-input" type="password" id="adminPwdInput" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"><button class="admin-pwd-btn" onclick="submitAdminLogin()">Ingresar</button><div class="admin-login-msg" id="adminLoginMsg"></div><button class="admin-login-cancel" onclick="closeAdminLogin()">Cancelar</button></div></div>
 <div class="admin-panel" id="adminPanel">
-<div class="admin-topbar"><h1>SBN Admin</h1><div class="admin-topbar-right"><button class="admin-tab-btn active" id="tabProductos" onclick="switchAdminTab('productos')">Productos</button><button class="admin-tab-btn" id="tabPedidos" onclick="switchAdminTab('pedidos')">Pedidos</button><button class="admin-csv-btn" onclick="openCsvImport()">&#8679; Importar CSV</button><button class="admin-sync-btn" onclick="loadAdminTable(); if(document.getElementById('adminPedidosSection').style.display!=='none') loadPedidos();">&#8635; Recargar</button><button class="admin-csv-btn" onclick="document.getElementById('adminChangePassWrap').style.display='block'">&#128274; Contraseña</button><button class="admin-close-btn" onclick="closeAdmin()">&#215; Salir</button><button onclick="document.getElementById('adminHelpBox').style.display=document.getElementById('adminHelpBox').style.display==='none'?'block':'none'" title="Ayuda" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.5);font-size:1.1rem;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:color 0.2s;margin-left:0.3rem;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.5)'">&#9432;</button></div></div>
+<div class="admin-topbar"><h1>SBN Admin</h1><div class="admin-topbar-right"><button class="admin-tab-btn active" id="tabProductos" onclick="switchAdminTab('productos')">Productos</button><button class="admin-tab-btn" id="tabPedidos" onclick="switchAdminTab('pedidos')">Pedidos</button><button class="admin-csv-btn" onclick="exportCsv()">&#8681; Exportar CSV</button><button class="admin-csv-btn" onclick="openCsvImport()">&#8679; Importar CSV</button><button class="admin-sync-btn" onclick="loadAdminTable(); if(document.getElementById('adminPedidosSection').style.display!=='none') loadPedidos();">&#8635; Recargar</button><button class="admin-csv-btn" onclick="document.getElementById('adminChangePassWrap').style.display='block'">&#128274; Contraseña</button><button class="admin-close-btn" onclick="closeAdmin()">&#215; Salir</button><button onclick="document.getElementById('adminHelpBox').style.display=document.getElementById('adminHelpBox').style.display==='none'?'block':'none'" title="Ayuda" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.5);font-size:1.1rem;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:color 0.2s;margin-left:0.3rem;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.5)'">&#9432;</button></div></div>
 <div class="admin-content"><div class="admin-content-inner"><div id="adminInteresWrap" style="background:#fff;border:1px solid var(--border);padding:0.8rem 1.2rem;margin-bottom:1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
   <span style="font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink);font-weight:600;">Recargo tarjeta:</span>
   <div style="display:flex;align-items:center;gap:0.4rem;">
@@ -422,6 +422,7 @@ footer{background:var(--ink);padding:4rem 3rem;}
     <input class="admin-search-input" type="text" id="pedidosSearch" placeholder="Buscar por nro de orden o producto..." oninput="filterPedidos(this.value)" style="max-width:600px;width:600px;">
     <button class="admin-search-clear" onclick="document.getElementById('pedidosSearch').value='';filterPedidos('')">&#215;</button>
     <span class="admin-search-count" id="pedidosCount"></span>
+    <button class="admin-save-btn" onclick="exportPedidosCsv()" style="margin-left:0.5rem;">&#8681; Exportar pedidos</button>
   </div>
   <div class="admin-table-wrap" style="margin-top:0.5rem;">
     <table class="admin-table" style="min-width:800px;">
@@ -1164,6 +1165,63 @@ async function saveIva() {
     setTimeout(() => document.getElementById('ivaMsg').textContent = '', 2000);
   } catch(e) { document.getElementById('ivaMsg').textContent = 'Error: '+e.message; }
 }
+function exportCsv() {
+  const cols = ['id_producto','nombre_variante','categoria','color','precio_venta','stock_disponible','descripcion_web','link_imagenes','activo','stock_minimo','etiqueta','subtitulo'];
+  const rows = [cols.join(',')];
+
+  // Get data from current admin table rows
+  const tableRows = document.querySelectorAll('#adminTableBody tr');
+  if (tableRows.length === 0) {
+    showAdminStatus('No hay productos para exportar', 'err');
+    return;
+  }
+
+  tableRows.forEach(row => {
+    const id = row.id.replace('arow-', '');
+    const get = field => {
+      const el = row.querySelector('[data-field="'+field+'"]');
+      if (!el) return '';
+      if (el.tagName === 'SELECT') return el.options[el.selectedIndex]?.value || '';
+      if (el.type === 'checkbox' || el.classList.contains('admin-toggle')) return el.classList.contains('on') ? 'true' : 'false';
+      return el.value || '';
+    };
+    // Get activo from toggle
+    const toggleEl = row.querySelector('.admin-toggle');
+    const activo = toggleEl ? (toggleEl.classList.contains('on') ? 'true' : 'false') : 'true';
+
+    const rowData = [
+      id,
+      get('nombre_variante'),
+      get('categoria'),
+      get('color'),
+      get('precio_venta'),
+      get('stock_disponible'),
+      get('descripcion_web'),
+      get('link_imagenes'),
+      activo,
+      get('stock_minimo'),
+      get('etiqueta'),
+      get('subtitulo')
+    ].map(v => {
+      const s = String(v || '');
+      // Quote fields that contain commas or quotes
+      return s.includes(',') || s.includes('"') || s.includes('\n')
+        ? '"' + s.replace(/"/g, '""') + '"'
+        : s;
+    });
+    rows.push(rowData.join(','));
+  });
+
+  const csv = rows.join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'sbn_productos_' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showAdminStatus('CSV exportado correctamente', 'ok');
+}
 function filterAdminTable(query) {
   const q = query.trim().toLowerCase();
   const rows = document.querySelectorAll('#adminTableBody tr');
@@ -1432,6 +1490,40 @@ async function deletePedido(id) {
   } catch(e) { showAdminStatus('Error: '+e.message, 'err'); }
 }
 
+function exportPedidosCsv() {
+  if (!allPedidos || allPedidos.length === 0) {
+    showAdminStatus('No hay pedidos para exportar', 'err');
+    return;
+  }
+  const cols = ['nro_orden','fecha','detalle','total','metodo_pago','nota','estado','direccion_entrega'];
+  const rows = [cols.join(',')];
+  allPedidos.forEach(p => {
+    const fecha = p.fecha ? new Date(p.fecha).toLocaleString('es-AR') : '';
+    const rowData = [
+      p.nro_orden || '',
+      fecha,
+      p.detalle || '',
+      p.total || '',
+      p.metodo_pago || '',
+      p.nota || '',
+      p.estado || '',
+      p.direccion_entrega || ''
+    ].map(v => {
+      const s = String(v).replace(/\n/g, ' ');
+      return s.includes(',') || s.includes('"') ? '"' + s.replace(/"/g, '""') + '"' : s;
+    });
+    rows.push(rowData.join(','));
+  });
+  const csv = rows.join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'sbn_pedidos_' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showAdminStatus('Pedidos exportados correctamente', 'ok');
+}
 function filterPedidos(q) {
   const query = q.toLowerCase();
   allPedidos.filter(p => !query || (p.nro_orden||'').toLowerCase().includes(query) || (p.detalle||'').toLowerCase().includes(query));
