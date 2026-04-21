@@ -571,11 +571,10 @@ function renderDetailPage(p) {
   document.getElementById('detail-name').textContent = p.nombre_variante;
   document.getElementById('detail-color').textContent = p.color || '';
   const precioTransf = Number(p.precio_venta);
-  const precioTarjeta = Math.round(precioTransf / calcFactor());
+  const precioTarjeta = Math.ceil(precioTransf / calcFactor());
   let priceHtml = '<div style="margin-bottom:0.3rem;">$' + precioTransf.toLocaleString('es-AR') + '<sub style="font-size:0.65rem;color:var(--ink-lt);margin-left:4px;">Transferencia</sub></div>';
   if (INTERES_TARJETA > 0 || IVA > 0) { // show card price
-    const labelExtra = [INTERES_TARJETA > 0 ? INTERES_TARJETA+'% recargo' : '', IVA > 0 ? 'IVA '+IVA+'%' : ''].filter(Boolean).join(' + ');
-    priceHtml += '<div style="font-size:1.1rem;color:var(--ink-mid);">$' + precioTarjeta.toLocaleString('es-AR') + '<sub style="font-size:0.65rem;color:var(--ink-lt);margin-left:4px;">Tarjeta ('+labelExtra+')</sub></div>';
+    priceHtml += '<div style="font-size:1.1rem;color:var(--ink-mid);">$' + precioTarjeta.toLocaleString('es-AR') + '<sub style="font-size:0.65rem;color:var(--ink-lt);margin-left:4px;">Link de pago</sub></div>';
   }
   document.getElementById('detail-price').innerHTML = priceHtml;
   document.getElementById('detail-desc').textContent = p.descripcion_web || '';
@@ -839,7 +838,7 @@ function calcFactor() {
 }
 function calcTotals() {
   const totalTransf = cart.reduce((s,c) => s+(Number(c.precio_venta)||0)*c.qty, 0);
-  const totalTarjeta = Math.round(totalTransf / calcFactor());
+  const totalTarjeta = Math.ceil(totalTransf / calcFactor());
   return { totalTransf, totalTarjeta };
 }
 function renderCart() {
@@ -855,10 +854,7 @@ function renderCart() {
 
     const setEl = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val; };
     // Build label: "Recargo tarjeta (4.9% + IVA 21%)"
-    const labelParts = [];
-    if (INTERES_TARJETA > 0) labelParts.push(INTERES_TARJETA + '%');
-    if (IVA > 0) labelParts.push('IVA ' + IVA + '%');
-    setEl('cartDesgloseLabel', 'Recargo tarjeta (' + labelParts.join(' + ') + ')');
+    setEl('cartDesgloseLabel', 'Link de pago');
     setEl('cartTotalTarjetaAmt', '$' + totalTarjeta.toLocaleString('es-AR'));
     if (desglose) desglose.style.display = 'flex';
     document.getElementById('cartTotal').textContent = '$' + totalTransf.toLocaleString('es-AR');
