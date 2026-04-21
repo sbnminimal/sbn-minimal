@@ -331,7 +331,7 @@ footer{background:var(--ink);padding:4rem 3rem;}
   <div class="summary-row"><span class="summary-label">Subtotal</span><span class="summary-val" id="cartSubtotal">$0</span></div>
   <div class="summary-row"><span class="summary-label">Envío</span><span class="summary-val" style="font-size:0.62rem;text-transform:uppercase;color:var(--ink-lt);">A convenir</span></div>
 </div>
-<div class="summary-total"><span class="total-label">Total</span><span class="total-amount" id="cartTotal">$0</span></div>
+<div class="summary-total"><span class="total-label" id="cartTotalLabel">TOTAL TRANSFERENCIA</span><span class="total-amount" id="cartTotal">$0</span></div>
 <div id="cartDesgloseTarjeta" class="summary-total" style="display:none;border-top:1px dashed var(--border);">
   <span id="cartDesgloseLabel" class="total-label">TOTAL LINK DE PAGO</span>
   <span id="cartTotalTarjetaAmt" class="total-amount">$0</span>
@@ -1029,9 +1029,11 @@ function selectPago(metodo) {
   metodoPago = metodo;
   const btnT = document.getElementById('btnTransferencia');
   const btnL = document.getElementById('btnTarjeta');
+  const labelEl = document.getElementById('cartTotalLabel');
   if (metodo === 'transferencia') {
     if (btnT) { btnT.style.background='var(--ink)'; btnT.style.color='#fff'; btnT.style.borderColor='var(--ink)'; }
     if (btnL) { btnL.style.background='none'; btnL.style.color='var(--ink-mid)'; btnL.style.borderColor='var(--border)'; }
+    if (labelEl) labelEl.textContent = 'TOTAL TRANSFERENCIA';
   } else {
     if (btnL) { btnL.style.background='var(--ink)'; btnL.style.color='#fff'; btnL.style.borderColor='var(--ink)'; }
     if (btnT) { btnT.style.background='none'; btnT.style.color='var(--ink-mid)'; btnT.style.borderColor='var(--border)'; }
