@@ -571,9 +571,7 @@ function renderDetailPage(p) {
   document.getElementById('detail-name').textContent = p.nombre_variante;
   document.getElementById('detail-color').textContent = p.color || '';
   const precioTransf = Number(p.precio_venta);
-  const recargoUnit = Math.round(precioTransf * INTERES_TARJETA / 100);
-  const ivaUnit = Math.round(recargoUnit * IVA / 100);
-  const precioTarjeta = precioTransf + recargoUnit + ivaUnit;
+  const precioTarjeta = Math.round(precioTransf / calcFactor());
   let priceHtml = '<div style="margin-bottom:0.3rem;">$' + precioTransf.toLocaleString('es-AR') + '<sub style="font-size:0.65rem;color:var(--ink-lt);margin-left:4px;">Transferencia</sub></div>';
   if (INTERES_TARJETA > 0 || IVA > 0) { // show card price
     const labelExtra = [INTERES_TARJETA > 0 ? INTERES_TARJETA+'% recargo' : '', IVA > 0 ? 'IVA '+IVA+'%' : ''].filter(Boolean).join(' + ');
@@ -836,11 +834,12 @@ function saveCart() {
   localStorage.setItem('sbn_cart', JSON.stringify(cart));
   document.getElementById('cartCount').textContent = cart.reduce((s,c) => s+c.qty, 0);
 }
+function calcFactor() {
+  return 1 - (INTERES_TARJETA / 100) - (INTERES_TARJETA / 100 * IVA / 100);
+}
 function calcTotals() {
   const totalTransf = cart.reduce((s,c) => s+(Number(c.precio_venta)||0)*c.qty, 0);
-  const recargo = Math.round(totalTransf * INTERES_TARJETA / 100);
-  const ivasobreRecargo = Math.round(recargo * IVA / 100);
-  const totalTarjeta = totalTransf + recargo + ivasobreRecargo;
+  const totalTarjeta = Math.round(totalTransf / calcFactor());
   return { totalTransf, totalTarjeta };
 }
 function renderCart() {
@@ -852,8 +851,7 @@ function renderCart() {
 
   const desglose = document.getElementById('cartDesgloseTarjeta');
   try { if (metodoPago === 'tarjeta' && (INTERES_TARJETA > 0 || IVA > 0)) {
-    const recargo = Math.round(totalTransf * INTERES_TARJETA / 100);
-    const montoIva = Math.round(recargo * IVA / 100);
+    const recargo = totalTarjeta - totalTransf;
 
     const setEl = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val; };
     // Build label: "Recargo tarjeta (4.9% + IVA 21%)"
