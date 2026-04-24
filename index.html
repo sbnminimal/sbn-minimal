@@ -513,7 +513,7 @@ function getFirstPhoto(p) {
   if (!p.link_imagenes) return null;
   const urls = p.link_imagenes.split('|').filter(u => u.trim());
   if (urls.length === 0) return null;
-  const picked = urls[Math.floor(Math.random() * urls.length)];
+  const picked = urls[0]; // always first for consistency
   return proxyUrl(picked);
 }
 function getAllPhotos(p) {
@@ -878,7 +878,8 @@ function renderCart() {
     const color= item.color || '';
     const photo = getFirstPhoto(item);
     const imgHtml = photo
-      ? '<img class="ci-img" src="'+photo+'" alt="'+name+'">'
+      ? '<img class="ci-img" src="'+photo+'" alt="'+name+'" onerror="this.style.display=\'none\';this.nextSibling&&(this.nextSibling.style.display=\'flex\')">'
+      +'<div class="ci-img-placeholder" style="display:none;">'+cat+'</div>'
       : '<div class="ci-img-placeholder">'+cat+'</div>';
     return '<div class="cart-item">'+imgHtml
       +'<div class="ci-body"><div class="ci-top"><div>'
@@ -993,6 +994,7 @@ async function sendToWhatsApp() {
   // Save order to Supabase
   const pedido = {
     nro_orden: nroOrden,
+    fecha: new Date().toISOString(),
     detalle: detalle,
     total: totalFinal,
     nota: note || '',
@@ -1005,6 +1007,34 @@ async function sendToWhatsApp() {
     body: JSON.stringify(pedido),
     headers: {'Prefer': 'return=minimal'}
   }).catch(e => console.warn('Error guardando pedido:', e));
+
+  // Descontar stock de cada producto
+  cart.forEach(async item => {
+    try {
+      const stockActual = Number(item.stock_disponible);
+      if (isNaN(stockActual)) return;
+      const nuevoStock = Math.max(0, stockActual - item.qty);
+      await sbFetch('producto?id_producto=eq.' + encodeURIComponent(item.id_producto), {
+        method: 'PATCH',
+        body: JSON.stringify({ stock_disponible: nuevoStock }),
+        headers: { 'Prefer': 'return=minimal' }
+      });
+      // Update local products array and etiqueta if out of stock
+      const local = products.find(p => p.id_producto === item.id_producto);
+      if (local) {
+        local.stock_disponible = nuevoStock;
+        if (nuevoStock === 0) {
+          local.etiqueta = 'SIN STOCK';
+          await sbFetch('producto?id_producto=eq.' + encodeURIComponent(item.id_producto), {
+            method: 'PATCH',
+            body: JSON.stringify({ etiqueta: 'SIN STOCK' }),
+            headers: { 'Prefer': 'return=minimal' }
+          });
+        }
+      }
+    } catch(e) { console.warn('Error actualizando stock:', item.id_producto, e); }
+  });
+
   const a = document.createElement('a');
   a.href = 'https://wa.me/'+CONFIG.whatsapp+'?text='+encodeURIComponent(msg);
   a.target = '_blank'; a.rel = 'noopener noreferrer';
