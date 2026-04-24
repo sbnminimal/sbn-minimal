@@ -150,8 +150,10 @@ header{position:sticky;top:0;z-index:100;background:rgba(252,249,248,0.88);backd
 .cart-header-left p{font-size:0.6rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--ink-lt);}
 .close-btn{background:none;border:none;font-size:1.2rem;color:var(--ink-lt);cursor:pointer;width:36px;height:36px;display:flex;align-items:center;justify-content:center;transition:color 0.15s;}
 .close-btn:hover{color:var(--ink);}
-.clear-cart-btn{background:none;border:none;font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-lt);cursor:pointer;padding:0;transition:color 0.15s;text-decoration:underline;}
-.clear-cart-btn:hover{color:#c0392b;}
+.clear-cart-btn{background:none;border:1px solid var(--border);font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-mid);cursor:pointer;padding:0.35rem 0.8rem;transition:all 0.15s;}
+.clear-cart-btn:hover{border-color:#c0392b;color:#c0392b;}
+.keep-shopping-btn{background:var(--ink);border:1px solid var(--ink);font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:#fff;cursor:pointer;padding:0.35rem 0.8rem;transition:all 0.15s;font-family:'Plus Jakarta Sans',sans-serif;}
+.keep-shopping-btn:hover{background:var(--accent);border-color:var(--accent);}
 .cart-ítems{flex:1;overflow-y:auto;overflow-x:hidden;min-height:0;background:var(--bg);}
 .cart-empty{padding:4rem 2.5rem;text-align:center;color:var(--ink-lt);font-size:0.8rem;}
 .cart-empty p{margin-top:0.8rem;font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;}
@@ -324,7 +326,7 @@ footer{background:var(--ink);padding:4rem 3rem;}
 <div class="detail-features"><div class="detail-feature"><span class="detail-feature-icon">&#10003;</span> Pedido confirmado por WhatsApp</div><div class="detail-feature"><span class="detail-feature-icon">&#128184;</span> Pagá con transferencia o tarjeta</div><div class="detail-feature"><span class="detail-feature-icon">&#128666;</span> Envíos a todo el país</div><div class="detail-feature"><span class="detail-feature-icon">&#128155;</span> Joyas de todos los días</div></div>
 </div></div></div></div>
 <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
-<div class="cart-drawer" id="cartDrawer"><div class="cart-header"><div class="cart-header-left"><h2>Tu Carrito</h2><p id="cartCountLabel">0 ítems</p></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem;"><button class="close-btn" onclick="toggleCart()">&#215;</button><button class="clear-cart-btn" onclick="clearCart()">Limpiar carrito</button></div></div>
+<div class="cart-drawer" id="cartDrawer"><div class="cart-header"><div class="cart-header-left"><h2>Tu Carrito</h2><p id="cartCountLabel">0 ítems</p></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem;"><button class="close-btn" onclick="toggleCart()">&#215;</button><div style="display:flex;gap:0.5rem;"><button class="keep-shopping-btn" onclick="toggleCart()">Seguir comprando</button><button class="clear-cart-btn" onclick="clearCart()">Limpiar carrito</button></div></div></div>
 <div class="cart-ítems" id="cartItems"></div>
 <div class="cart-summary">
 <div class="summary-rows">
