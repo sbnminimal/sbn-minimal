@@ -971,11 +971,15 @@ async function sendToWhatsApp() {
   const note = document.getElementById('cartNote').value.trim();
   if (!note) {
     const noteEl = document.getElementById('cartNote');
-    noteEl.style.borderColor = 'var(--accent)';
-    noteEl.style.outline = '2px solid var(--accent)';
+    noteEl.style.borderColor = '#c0392b';
+    noteEl.style.outline = '2px solid #c0392b';
     noteEl.focus();
     noteEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    setTimeout(() => { noteEl.style.borderColor = ''; noteEl.style.outline = ''; }, 3000);
+    noteEl.addEventListener('input', function onType() {
+      noteEl.style.borderColor = '';
+      noteEl.style.outline = '';
+      noteEl.removeEventListener('input', onType);
+    });
     return;
   }
   const nroOrden = await generarNroOrden();
