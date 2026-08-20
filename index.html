@@ -270,7 +270,8 @@ footer{background:var(--ink);padding:4rem 3rem;}
 .admin-search-clear{background:none;border:none;color:var(--ink-lt);cursor:pointer;font-size:0.85rem;padding:0.2rem 0.4rem;transition:color 0.15s;}
 .admin-search-clear:hover{color:var(--ink);}
 .admin-search-count{font-size:0.65rem;color:var(--ink-lt);letter-spacing:0.08em;}
-.admin-table-wrap{background:#fff;border:1px solid var(--border);overflow-x:auto;}
+.admin-table-wrap{background:#fff;border:1px solid var(--border);overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 280px);}
+.admin-table-wrap thead th{position:sticky;top:0;z-index:1;}
 .admin-table{width:100%;border-collapse:collapse;font-size:0.77rem;min-width:900px;}
 .admin-table th{background:var(--bg-low);padding:0.75rem 0.9rem;text-align:left;font-size:0.58rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink-mid);font-weight:600;border-bottom:1px solid var(--border);white-space:nowrap;}
 .admin-table td{padding:0.6rem 0.9rem;border-bottom:1px solid var(--border);vertical-align:middle;}
