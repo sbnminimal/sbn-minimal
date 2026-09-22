@@ -1,0 +1,45 @@
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    - cron: '0 12 * * *'   # 9:00 am Argentina (UTC-3)
+    - cron: '0 21 * * *'   # 18:00 pm Argentina (UTC-3)
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API (con reintentos)
+        run: |
+          MAX_INTENTOS=3
+          ESPERA_SEGUNDOS=20
+
+          for intento in $(seq 1 $MAX_INTENTOS); do
+            echo "== Intento $intento de $MAX_INTENTOS =="
+            STATUS=$(curl -s -o /tmp/resp.json -w "%{http_code}" \
+              "$SUPABASE_URL/rest/v1/producto?select=id_producto&limit=1" \
+              -H "apikey: $SUPABASE_ANON_KEY" \
+              -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+
+            echo "HTTP status: $STATUS"
+            cat /tmp/resp.json || true
+            echo ""
+
+            if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 300 ]; then
+              echo "✅ Keep-alive OK (intento $intento)."
+              exit 0
+            fi
+
+            echo "⚠️  Falló el intento $intento."
+            if [ "$intento" -lt "$MAX_INTENTOS" ]; then
+              echo "Esperando ${ESPERA_SEGUNDOS}s antes de reintentar..."
+              sleep $ESPERA_SEGUNDOS
+            fi
+          done
+
+          echo "❌ Los $MAX_INTENTOS intentos fallaron."
+          exit 1
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
