@@ -12,6 +12,13 @@ jobs:
     steps:
       - name: Ping Supabase REST API (con reintentos)
         run: |
+          # ══════════════════════════════════════════════════════════════════
+          # MODO PRUEBA: descomentá la siguiente línea para forzar un fallo
+          # y probar que el mail de aviso llegue bien. Volvé a comentarla
+          # (agregar el # adelante) para que el chequeo real funcione de nuevo.
+          # ══════════════════════════════════════════════════════════════════
+          # echo "🧪 Modo prueba activado: forzando fallo a propósito"; exit 1
+
           MAX_INTENTOS=3
           ESPERA_SEGUNDOS=20
 
@@ -43,3 +50,29 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+      - name: Avisar por mail si falló
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.GMAIL_USER }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          from: SBN Keep-Alive <${{ secrets.GMAIL_USER }}>
+          to: ${{ secrets.GMAIL_USER }}
+          subject: "🚨⚠️ ALERTA: falló la verificación del sitio SBN ⚠️🚨"
+          body: |
+            El workflow "Supabase Keep-Alive" falló después de 3 intentos.
+
+            Repo: ${{ github.repository }}
+            Corrida: ${{ github.run_id }}
+            Fecha (UTC): ${{ github.event.repository.updated_at }}
+
+            Es probable que el proyecto de Supabase se haya pausado o esté teniendo
+            problemas de conexión. Entrá al dashboard de Supabase y revisá si hace
+            falta reactivarlo manualmente:
+            https://supabase.com/dashboard/project/mpdrpzhziibnafdjdqdb
+
+            Ver el log completo de esta corrida:
+            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
