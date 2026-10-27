@@ -55,17 +55,17 @@ jobs:
           intentar "GET de lectura" hacer_get || exit 1
           cat /tmp/get_resp.json; echo ""
 
-          # ---------- paso 2: upsert en config (clave dedicada) ----------
-          hacer_upsert_config() {
+          # ---------- paso 2: PATCH en config (clave dedicada, ya creada a mano) ----------
+          hacer_patch_config() {
             curl -s -o /tmp/config_resp.json -w "%{http_code}" \
-              -X POST "$SUPABASE_URL/rest/v1/config?on_conflict=clave" \
+              -X PATCH "$SUPABASE_URL/rest/v1/config?clave=eq.keepalive_ping" \
               -H "apikey: $SUPABASE_ANON_KEY" \
               -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
               -H "Content-Type: application/json" \
-              -H "Prefer: resolution=merge-duplicates,return=minimal" \
-              -d "{\"clave\":\"keepalive_ping\",\"valor\":\"$AHORA\"}"
+              -H "Prefer: return=minimal" \
+              -d "{\"valor\":\"$AHORA\"}"
           }
-          intentar "Upsert en config.keepalive_ping" hacer_upsert_config || exit 1
+          intentar "PATCH en config.keepalive_ping" hacer_patch_config || exit 1
           cat /tmp/config_resp.json; echo ""
 
           # ---------- paso 3: upsert en producto (fila dedicada, oculta) ----------
